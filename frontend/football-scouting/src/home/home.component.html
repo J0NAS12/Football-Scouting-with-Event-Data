@@ -1,0 +1,33 @@
+<h2>Match Results</h2>
+<mat-form-field appearance="outline" color="primary">
+    <mat-label>Competitions</mat-label>
+    <mat-select (valueChange)="competitionSelected($event)" style="background-color: white;">
+        <mat-option [value]="">All</mat-option>
+        @for (competition of competitions; track competition) {
+        <mat-option [value]="competition.competition_id">{{competition.competition_name}} {{
+            competition.season_name}}</mat-option>
+        }
+    </mat-select>
+</mat-form-field>
+
+<mat-form-field appearance="outline" color="primary">
+    <mat-label>Matches</mat-label>
+    <mat-select (valueChange)="matchSelected($event)" style="background-color: white;">
+        @for (match of matches; track match) {
+        <mat-option [value]="match.id">{{match.home_team_name}} {{match.home_score}} - {{match.away_score}}
+            {{match.away_team_name}}</mat-option>
+        }
+    </mat-select>
+</mat-form-field>
+
+<mat-form-field appearance="outline" color="primary">
+    <mat-label>Events</mat-label>
+    <mat-select (valueChange)="eventSelected($event)" style="background-color: white;">
+        @for (event of events; track event) {
+        <mat-option [value]="event.id">{{event.event_name}}</mat-option>
+        }
+    </mat-select>
+</mat-form-field>
+<div>
+    {{event}}
+</div>
