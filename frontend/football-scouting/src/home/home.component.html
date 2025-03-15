@@ -24,10 +24,9 @@
     <mat-label>Events</mat-label>
     <mat-select (valueChange)="eventSelected($event)" style="background-color: white;">
         @for (event of events; track event) {
-        <mat-option [value]="event.id">{{event.event_name}}</mat-option>
+        <mat-option [value]="event.id">{{event.event_name}} - {{event.player_name}}</mat-option>
         }
     </mat-select>
 </mat-form-field>
-<div>
-    {{event}}
-</div>
+
+<app-football-pitch [event]="event"></app-football-pitch>

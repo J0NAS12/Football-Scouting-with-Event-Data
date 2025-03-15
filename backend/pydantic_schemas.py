@@ -40,13 +40,12 @@ class CompetitionResponse(BaseModel):
         from_attributes = True
 
 class PlayerPositionResponse(BaseModel):
-    event_id: UUID
     teammate: int
     x: float
     y: float
     player_id: int
     player_name: Optional[str] = None
-    position_id: int
+    position_id: Optional[int]
     position_name: Optional[str] = None
 
     class Config:
@@ -61,9 +60,9 @@ class EventResponse(BaseModel):
     end_x: float
     end_y: float
     player_id: int
-    position_id: int
+    position_id: Optional[int]
+    player_name: str
     event_name: str
-    #player_positions: list[PlayerPositionResponse]
     class Config:
         from_attributes = True
 
