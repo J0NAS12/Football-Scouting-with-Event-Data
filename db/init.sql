@@ -54,7 +54,14 @@ CREATE TABLE events
     end_x FLOAT,
     end_y FLOAT,
     timestamp TIME,
-    period INTEGER
+    period INTEGER,
+    duration FLOAT,
+    team_id INTEGER,
+    play_pattern_id INTEGER,
+    possession_team_id INTEGER,
+    sub_type_id INTEGER,
+    outcome_id INTEGER
+
 );
 
 CREATE TABLE event_types
@@ -65,17 +72,24 @@ CREATE TABLE event_types
 
 CREATE TABLE passes
 (
-    id INTEGER PRIMARY KEY,
+    id UUID PRIMARY KEY,
     recipient_id INTEGER,
     pass_length FLOAT,
     pass_angle FLOAT,
-    height_id INTEGER
+    height_id INTEGER,
+    end_x FLOAT,
+    end_y FLOAT,
+    assisted_shot_id UUID
 );
 
 CREATE TABLE shots
 (
     id INTEGER PRIMARY KEY,
-    statsbomb_xg FLOAT
+    statsbomb_xg FLOAT,
+    first_time BOOLEAN,
+    technique_id INTEGER,
+    key_pass_id INTEGER,
+    one_on_one BOOLEAN
 );
 
 
@@ -91,6 +105,29 @@ CREATE TABLE player_positions
     position_id INTEGER
 );
 
+CREATE TABLE play_patterns
+(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(255)
+);
 
+CREATE TABLE event_sub_types
+(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(255)
+);
+
+CREATE TABLE outcomes
+(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(255)
+);
+
+
+CREATE TABLE positions
+(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(255)
+);
 
 

@@ -1,7 +1,10 @@
 <div class="container">
+    <span class="goal"></span>
     <div class="field">
         <div class="player-position-with-ball" [id]="event ? event.player_id :  0"
             [matTooltip]="event ? event.player_name :  ''">
+        </div>
+        <div class="player-position-with-ball" [id]="'end'" [matTooltip]="event ? event.player_name :  ''">
         </div>
         @for (player of (event ? event.player_positions : []); track event) {
         <div class="player-position" [id]="player.player_id" [matTooltip]="player.player_name"></div>
@@ -31,4 +34,5 @@
 
 
     </div>
+    <span class="goal"></span>
 </div>

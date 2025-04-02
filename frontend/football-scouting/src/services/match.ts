@@ -15,10 +15,16 @@ export class MatchService {
     return this.http.get(`${this.apiUrl}/competitions`);
   }
 
-  public getMatchesList(competition_id = undefined): Observable<any> {
+  public getMatchesList(
+    competition_id = undefined,
+    season_id = undefined
+  ): Observable<any> {
     let params = new HttpParams();
     if (competition_id !== undefined) {
       params = params.set('competition_id', competition_id);
+    }
+    if (season_id !== undefined) {
+      params = params.set('season_id', season_id);
     }
     return this.http.get(`${this.apiUrl}/matches`, { params });
   }
@@ -29,6 +35,14 @@ export class MatchService {
       params = params.set('match_id', match_id);
     }
     return this.http.get(`${this.apiUrl}/match/events`, { params });
+  }
+
+  public getStats(match_id = undefined): Observable<any> {
+    let params = new HttpParams();
+    if (match_id !== undefined) {
+      params = params.set('match_id', match_id);
+    }
+    return this.http.get(`${this.apiUrl}/match/stats`, { params });
   }
 
   public getEventwithPlayerPositions(event_id = undefined): Observable<any> {

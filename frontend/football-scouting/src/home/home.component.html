@@ -1,4 +1,4 @@
-<h2>Match Results</h2>
+<h2>Select match to analyze</h2>
 <mat-form-field appearance="outline" color="primary">
     <mat-label>Competitions</mat-label>
     <mat-select (valueChange)="competitionSelected($event)" style="background-color: white;">
@@ -14,12 +14,12 @@
     <mat-label>Matches</mat-label>
     <mat-select (valueChange)="matchSelected($event)" style="background-color: white;">
         @for (match of matches; track match) {
-        <mat-option [value]="match.id">{{match.home_team_name}} {{match.home_score}} - {{match.away_score}}
-            {{match.away_team_name}}</mat-option>
+        <mat-option [value]="match.id">{{match.home_team_name}} {{match.home_score}} -
+            {{match.away_score}} {{match.away_team_name}}</mat-option>
         }
     </mat-select>
 </mat-form-field>
-
+<!--
 <mat-form-field appearance="outline" color="primary">
     <mat-label>Events</mat-label>
     <mat-select (valueChange)="eventSelected($event)" style="background-color: white;">
@@ -28,5 +28,40 @@
         }
     </mat-select>
 </mat-form-field>
+-->
 
-<app-football-pitch [event]="event"></app-football-pitch>
+
+@if (!!event) {
+<mat-card>
+    {{currentMatch.home_team_name}} {{currentMatch.home_score}}
+    - {{currentMatch.away_score}} {{currentMatch.away_team_name}}
+</mat-card>
+<div style="display: flex; flex-direction: row; justify-content: left;">
+    <mat-card style="display: flex; justify-content: flex-start;">
+        <div style="display: flex; justify-content:center; flex-direction: row;">
+            <button mat-icon-button [disabled]="event_index==0"
+                (click)="eventChanged(-1)"><mat-icon>navigate_before</mat-icon></button>
+            <div style="width: 250px;">
+                <div [ngClass]="!!event ? '': 'hidden'">{{event?.player_name}}: {{event?.event_name}}</div>
+                <div [ngClass]="!!event ? '': 'hidden'">{{event?.period}}. Half: {{event?.timestamp}}</div>
+            </div>
+            <button mat-icon-button (click)="eventChanged(1)"><mat-icon>navigate_next</mat-icon></button>
+        </div>
+        <app-football-pitch style="padding: 10px;" [event]="event"></app-football-pitch>
+    </mat-card>
+    <mat-card style="display: flex; justify-content:center; flex-direction: row;">
+        @for (team of Object.keys(stats); track team) {
+        <div>
+            <h3>{{team}}</h3>
+            @for (stat of Object.keys(stats[team]); track stat) {
+            <div>
+                {{stat}}: {{stats[team][stat]}}
+            </div>
+            }
+        </div>
+        }
+    </mat-card>
+
+
+</div>
+}

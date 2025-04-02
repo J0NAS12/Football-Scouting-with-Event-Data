@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel
@@ -63,6 +63,12 @@ class EventResponse(BaseModel):
     position_id: Optional[int]
     player_name: str
     event_name: str
+    period: Optional[int]
+    timestamp: Optional[time]
+    team_id: int
+    team_name: str
+    sub_type_id: int
+    sub_type_name: str
     class Config:
         from_attributes = True
 

@@ -88,12 +88,35 @@ class Events(Base):
     position_id = Column(Integer)
     period = Column(Integer)
     timestamp = Column(Time)
+    duration = Column(Float)
+    team_id = Column(Integer)
+    play_pattern_id = Column(Integer)
+    possession_team_id = Column(Integer)
+    sub_type_id = Column(Integer)
+    outcome_id = Column(Integer)
 
 
 class EventTypes(Base):
     __tablename__ = "event_types"
     id = Column(Integer, primary_key=True)
     name = Column(String)
+
+class EventSubTypes(Base):
+    __tablename__ = "event_sub_types"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+class EventOutcomes(Base):
+    __tablename__ = "outcomes"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+class Positions(Base):
+    __tablename__ = "positions"  
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+
 
 
 

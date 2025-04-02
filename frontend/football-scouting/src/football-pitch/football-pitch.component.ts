@@ -17,11 +17,14 @@ import { MatTooltip } from '@angular/material/tooltip';
 })
 export class FootballPitchComponent implements OnInit, OnChanges {
   @Input('event') event?: {
+    event_name: string;
     player_positions: any[];
     player_name: string;
     player_id: number;
     x: number;
     y: number;
+    end_x: number;
+    end_y: number;
   };
 
   constructor() {}
@@ -40,6 +43,8 @@ export class FootballPitchComponent implements OnInit, OnChanges {
             d.style.top = player.y * 5 + 'px';
             if (!player.teammate) {
               d.style.backgroundColor = 'red';
+            } else {
+              d.style.backgroundColor = 'blue';
             }
           }
         });
@@ -48,6 +53,15 @@ export class FootballPitchComponent implements OnInit, OnChanges {
           ball.style.left = -5 + this.event.x * 5 + 'px';
           ball.style.top = -5 + this.event.y * 5 + 'px';
           ball.style.backgroundColor = 'lightblue';
+        }
+        let end = document.getElementById('end');
+        if (!!end && this.event.end_x > 0 && this.event.end_y > 0) {
+          end.style.left = -5 + this.event.end_x * 5 + 'px';
+          end.style.top = -5 + this.event.end_y * 5 + 'px';
+          end.style.backgroundColor = 'green';
+          end.style.display = 'block';
+        } else {
+          end!!.style.display = 'none';
         }
       }
     }, 0);
