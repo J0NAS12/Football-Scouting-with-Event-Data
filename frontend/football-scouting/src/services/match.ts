@@ -45,6 +45,14 @@ export class MatchService {
     return this.http.get(`${this.apiUrl}/match/stats`, { params });
   }
 
+  public getPlayerStats(match_id = undefined): Observable<any> {
+    let params = new HttpParams();
+    if (match_id !== undefined) {
+      params = params.set('match_id', match_id);
+    }
+    return this.http.get(`${this.apiUrl}/match/playerstats`, { params });
+  }
+
   public getEventwithPlayerPositions(event_id = undefined): Observable<any> {
     let params = new HttpParams();
     if (event_id !== undefined) {
@@ -55,5 +63,22 @@ export class MatchService {
 
   public getTeams(): Observable<any> {
     return this.http.get(`${this.apiUrl}/teams`);
+  }
+
+  public getPossessions(match_id: any): Observable<any> {
+    let params = new HttpParams();
+    if (match_id !== undefined) {
+      params = params.set('match_id', match_id);
+    }
+    return this.http.get(`${this.apiUrl}/match/possessions`, { params });
+  }
+
+  public getPossession(match_id: any, possession: number): Observable<any> {
+    let params = new HttpParams();
+    if (match_id !== undefined) {
+      params = params.set('match_id', match_id);
+      params = params.set('possession', possession);
+    }
+    return this.http.get(`${this.apiUrl}/match/possession`, { params });
   }
 }

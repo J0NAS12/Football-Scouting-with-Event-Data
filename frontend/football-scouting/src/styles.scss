@@ -18,3 +18,22 @@ $theme: mat.define-theme(
     ),
   )
 );
+
+//Animation
+:root {
+  --endX: 300px;
+  --endY: 0px;
+}
+
+@keyframes ballanimation {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(var(--endX), var(--endY));
+  }
+}
+
+.mat-mdc-tab-body {
+  overflow: hidden;
+}

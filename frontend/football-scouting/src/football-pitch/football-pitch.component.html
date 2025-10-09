@@ -1,14 +1,66 @@
+<svg width="0" height="0">
+    <defs>
+        <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"
+            markerUnits="strokeWidth">
+            <polygon points="0 0, 6 2, 0 4" fill="black" />
+        </marker>
+    </defs>
+</svg>
+
+
 <div class="container">
     <span class="goal"></span>
     <div class="field">
+        @if (event) {
+        @for (player of (event ? event.player_positions : []); track player) {
+        <div class="player-position" [id]="'ppos-'+$index" [matTooltip]="player.player_name || ''"></div>
+        }
         <div class="player-position-with-ball" [id]="event ? event.player_id :  0"
             [matTooltip]="event ? event.player_name :  ''">
         </div>
-        <div class="player-position-with-ball" [id]="'end'" [matTooltip]="event ? event.player_name :  ''">
+        <div class="ball-position-end" [id]="'end'" [matTooltip]="event ? event.player_name :  ''">
         </div>
-        @for (player of (event ? event.player_positions : []); track event) {
-        <div class="player-position" [id]="player.player_id" [matTooltip]="player.player_name"></div>
+        <div class="ball-position" [id]="'ball'" style="color: black;">
+        </div>
+
         }
+        @if (!!possession) {
+        <!--
+        @for (e of (possession ? possession.events : []); track e) {
+        <div class="player-position-with-ball" [id]="'poss-'+$index" [matTooltip]="e?.player_name">
+        </div>
+        }
+        -->
+        <svg height="400" width="600" xmlns="http://www.w3.org/2000/svg"
+            style="position: absolute; top: 0; left: 0; z-index: 10;">
+            @for (e of (possession ? possession.events : []); track e) {
+            @if (e.end_x > 0) {
+            <line [attr.x1]="scaleX(e.x, e.team_name == home_team)" [attr.y1]="scaleY(e.y, e.team_name == home_team)"
+                [attr.x2]="scaleX(e.end_x, e.team_name == home_team)"
+                [attr.y2]="scaleY(e.end_y, e.team_name == home_team)"
+                [attr.stroke]="e.team_name == home_team ? 'black' : 'white'" stroke-width="1.5"
+                marker-end="url(#arrowhead)" />
+
+            }
+
+            <circle [attr.cx]="scaleX(e.x, e.team_name == home_team)" [attr.cy]="scaleY(e.y, e.team_name == home_team)"
+                r="5" [attr.fill]="e.team_name == home_team ? 'blue' : 'red'" class="hover-text-circle"
+                style="pointer-events: all; z-index: 11;" />
+            <text [attr.x]="scaleX(e.x, e.team_name == home_team)+50"
+                [attr.y]="scaleY(e.y, e.team_name == home_team)+20" font-size="12" fill="white" text-anchor="middle"
+                alignment-baseline="middle" class="hover-text">
+                <tspan [attr.x]="scaleX(e.x, e.team_name == home_team)" dy="0" style="z-index: 12;">{{$index}}.
+                    {{e.player_name}}</tspan>
+                <tspan style="z-index: 12;" [attr.x]="scaleX(e.x, e.team_name == home_team)" dy="1.2em">{{e.event_name}}
+                </tspan>
+                <tspan x="0" dy="5px"></tspan>
+            </text>
+            }
+
+
+        </svg>
+        }
+
         <div class="left">
             <span class="halfway-line"></span>
             <span class="centre-circle"></span>
@@ -29,7 +81,6 @@
             <span class="penalty-arc"></span>
             <span class="goal-area"></span>
             <span class="corner-arc"></span>
-
         </div>
 
 

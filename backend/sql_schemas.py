@@ -27,8 +27,8 @@ class Matches(Base):
     match_week = Column(Integer)
     competition_id = Column(Integer)
     season_id = Column(Integer)
-    referee_id = Column(Integer)
-    stadium_id = Column(Integer)
+    referee = Column(String)
+    stadium = Column(String)
 
 
 class Seasons(Base):
@@ -40,7 +40,7 @@ class Teams(Base):
     __tablename__ = "teams"
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    country_id = Column(Integer)
+    country = Column(String)
 
 class Person(Base):
     __tablename__ = "person"
@@ -94,6 +94,7 @@ class Events(Base):
     possession_team_id = Column(Integer)
     sub_type_id = Column(Integer)
     outcome_id = Column(Integer)
+    possession = Column(Integer)
 
 
 class EventTypes(Base):
@@ -116,9 +117,64 @@ class Positions(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
 
+class PlayPatterns(Base):
+    __tablename__ = "play_patterns"  
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+class Techniques(Base):
+    __tablename__ = "techniques"  
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
 
 
+class Passes(Base):
+    __tablename__ = "passes"  
+    id = Column(UUID, primary_key=True)
+    recipient_id = Column(Integer)
+    pass_length = Column(Float)
+    pass_angle = Column(Float)
+    pass_height = Column(String)
+    assisted_shot_id = Column(UUID)
 
 
+class Shots(Base):
+    __tablename__ = "shots"  
+    id = Column(UUID, primary_key=True)
+    technique_id = Column(Integer)
+    statsbomb_xg = Column(Float)
+    first_time = Column(Float)
+    key_pass_id = Column(UUID)
+    one_on_one = Column(Boolean)
 
 
+class Possessions(Base):
+    __tablename__ = "possessions"  
+    match_id = Column(Integer, primary_key=True)
+    possession = Column(Integer, primary_key=True)
+    passes = Column(Integer)
+    carry = Column(Integer)
+    dribble = Column(Integer)
+    shot = Column(Integer)
+    duel = Column(Integer)
+    pressure = Column(Integer)
+    block = Column(Integer)
+    ball_recovery = Column(Integer)
+    interception = Column(Integer)
+    clearance  = Column(Integer)
+    avg_pass_length  = Column(Float)
+    pass_success_rate  = Column(Float)
+    possession_team_name = Column(String)
+    playing_style = Column(String)
+
+class PlayingTimes(Base):
+    __tablename__ = "playing_times"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    match_id = Column(Integer)
+    player_id = Column(Integer)
+    player_name = Column(String)
+    start_period = Column(Integer)
+    start_time = Column(Time)
+    end_period = Column(Integer)
+    end_time = Column(Time)
+    minutes = Column(Integer)

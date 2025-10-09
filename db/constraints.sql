@@ -12,7 +12,13 @@ CREATE TABLE matches
     competition_id INTEGER,
     season_id INTEGER,
     referee VARCHAR(255),
-    stadium VARCHAR(255)
+    stadium VARCHAR(255),
+  	CONSTRAINT fk_competition
+      FOREIGN KEY (competition_id)
+      REFERENCES competitions (competition_id),
+    	CONSTRAINT fk_competition
+      FOREIGN KEY (season_id)
+      REFERENCES competitions (season_id)
 );
 
 CREATE TABLE competitions
@@ -61,7 +67,33 @@ CREATE TABLE events
     possession INTEGER,
     possession_team_id INTEGER,
     sub_type_id INTEGER,
-    outcome_id INTEGER
+    outcome_id INTEGER,
+  	CONSTRAINT fk_match
+      FOREIGN KEY (match_id)
+      REFERENCES matches (id),
+    	CONSTRAINT fk_player
+      FOREIGN KEY (player_id)
+      REFERENCES person (id),
+    	CONSTRAINT fk_team
+      FOREIGN KEY (team_id)
+      REFERENCES teams (id),
+    	CONSTRAINT fk_outcome
+      FOREIGN KEY (outcome_id)
+      REFERENCES outcomes (id),
+    	CONSTRAINT fk_type
+      FOREIGN KEY (type_id)
+      REFERENCES event_types(id),
+  		CONSTRAINT play_pattern
+      FOREIGN KEY (play_pattern_id)
+      REFERENCES play_patterns(id),
+    		CONSTRAINT sub_type
+      FOREIGN KEY (sub_type_id)
+      REFERENCES event_sub_types(id),    		
+  CONSTRAINT position
+      FOREIGN KEY (position_id)
+      REFERENCES positions(id)
+  
+  
 );
 
 CREATE TABLE event_types
@@ -99,8 +131,12 @@ CREATE TABLE player_positions
     y FLOAT,
     match_id INTEGER,
     event_id UUID,
-    player_id INTEGER,
-    position_id INTEGER
+  CONSTRAINT fk_match
+      FOREIGN KEY (match_id)
+      REFERENCES matches (id),
+      	CONSTRAINT fk_event
+      FOREIGN KEY (event_id)
+      REFERENCES events (id)
 );
 
 CREATE TABLE play_patterns
@@ -151,20 +187,10 @@ CREATE TABLE possessions
     avg_pass_length FLOAT,
     pass_success_rate FLOAT,
     possession_team_name VARCHAR(255),
-    playing_style VARCHAR(255)
-);
-
-CREATE TABLE playing_times
-(
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    match_id INTEGER,
-    player_id INTEGER,
-    player_name VARCHAR(255),
-    start_period INTEGER,
-    start_time TIME,
-    end_period INTEGER,
-    end_time TIME,
-    minutes INTEGER
+    playing_style VARCHAR(255),
+  	CONSTRAINT fk_match
+      FOREIGN KEY (match_id)
+      REFERENCES matches (id)
 );
 
 

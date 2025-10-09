@@ -96,7 +96,7 @@ body {
   position: absolute;
   top: calc((80em - 44em) / 2);
   left: -0.3em;
-  //background-color: green;
+  background-color: green;
 }
 
 .penalty-arc {
@@ -159,4 +159,59 @@ body {
   border: 2px solid black;
   z-index: 1;
   border-radius: 50%;
+}
+
+.ball-position-end {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 2px solid black;
+  z-index: 1;
+  border-radius: 50%;
+}
+
+.ball-position {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 2px solid black;
+  background-color: white;
+  z-index: 1;
+  border-radius: 50%;
+}
+
+//Animation
+:root {
+  --endX: 0px;
+  --endY: 0px;
+  --duration: 1s;
+}
+
+@keyframes ballanimation {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(var(--endX), var(--endY));
+  }
+}
+
+.animate {
+  animation: ballanimation var(--duration) linear forwards;
+}
+
+.hover-text {
+  opacity: 0;
+  display: none;
+  transition: opacity 0.3s ease;
+}
+
+.hover-text-circle:hover + .hover-text {
+  display: block;
+  opacity: 1;
+}
+
+.hover-text:hover {
+  font-weight: bold;
+  fill: yellow; /* Change text color on hover */
 }
