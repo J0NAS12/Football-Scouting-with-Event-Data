@@ -1,5 +1,5 @@
 from datetime import date, time
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel
 
@@ -10,6 +10,13 @@ class MatchCreate(BaseModel):
     away_score: int
 #    referee: Optional[str]
 #    stadium: Optional[str]
+
+class EnumResponse(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
     
 
 class MatchResponse(MatchCreate):
@@ -128,3 +135,16 @@ class PossessionsResponse(BaseModel):
 
 class PossessionsResponseWithEvents(PossessionsResponse):
     events: list[EventResponse]
+
+
+class BucketInfo(BaseModel):
+    bucket: int
+    start: float
+    end: float
+    count: int
+
+class PlayerStatBuckets(BaseModel):
+    player_id: int
+    stat_name: str
+    player_bucket: int
+    buckets: List[BucketInfo]

@@ -1,114 +1,37 @@
-<mat-card style="padding: 8px; display: flex; flex-direction: row; justify-content: center;">
-    <mat-form-field appearance="outline" style="width: 300px; background-color: lightgreen;">
-        <mat-label>Competitions</mat-label>
-        <mat-select (valueChange)="competitionSelected($event)">
-            <mat-option [value]="">All</mat-option>
-            @for (competition of competitions; track competition) {
-            <mat-option [value]="competition.competition_id">{{competition.competition_name}} {{
-                competition.season_name}}</mat-option>
-            }
-        </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" color="primary" style="width: 300px;">
-        <mat-label>Matches</mat-label>
-        <mat-select (valueChange)="matchSelected($event)">
-            @for (match of matches; track match) {
-            <mat-option [value]="match.id">{{match.home_team_name}} {{match.home_score}} -
-                {{match.away_score}} {{match.away_team_name}}</mat-option>
-            }
-        </mat-select>
-    </mat-form-field>
-</mat-card>
-
-@if (!!event) {
-<mat-card style="display: flex; justify-content:center; flex-direction: row;  width: 100%">
-    <mat-tab-group style="width: 100%; height: 1000px;">
-        <mat-tab label="Match Info">
-            <div>
-
-                <h2 style="margin: 0;">
-                    <strong>{{competition.competition_name}}</strong> -
-                    {{competition.season_name}}: {{currentMatch.home_team_name}} {{currentMatch.home_score}} -
-                    {{currentMatch.away_score}} {{currentMatch.away_team_name}}
-                </h2>
-                <p style="margin: 4px 0;">
-
-                </p>
-                <p style="margin: 4px 0;">{{currentMatch.match_date}}</p>
-                <p style="margin: 4px 0;">Referee: {{currentMatch.referee}}</p>
-            </div>
-
-        </mat-tab>
-        <mat-tab label="Event-by-event analysis">
-            <div style="display: flex; justify-content:center; flex-direction: row;">
-                <button mat-icon-button [disabled]="event_index==0"
-                    (click)="eventChanged(-1)"><mat-icon>navigate_before</mat-icon></button>
-                <div style="width: 250px;">
-                    <div [ngClass]="!!event ? '': 'hidden'">{{event?.player_name}}: {{event?.event_name}}</div>
-                    <div [ngClass]="!!event ? '': 'hidden'">{{event?.period}}. Half: {{event?.timestamp}} |</div>
+<main class="main-content"><!-- Home Section -->
+    <section id="home-section" class="section-content active">
+        <div class="welcome-section">
+            <h1 class="welcome-title">Welcome to Sports Analytics</h1>
+            <p class="welcome-subtitle">Dive deep into player and team statistics with our comprehensive analytics
+                platform. Compare players, analyze performance trends, and discover insights with Material Design.
+            </p>
+        </div>
+        <div class="feature-cards">
+            <div class="mat-card feature-card">
+                <div class="mat-card-content" style="text-align: center; padding: 32px;">
+                    <div class="feature-icon blue"><span class="material-icons">person</span>
+                    </div>
+                    <h3 style="margin: 0 0 16px 0; font-weight: 500;">Player Analytics</h3>
+                    <p style="color: #666; margin: 0; line-height: 1.6;">Search and analyze individual player
+                        performance with detailed statistics and comparisons.</p>
                 </div>
-                <button mat-icon-button (click)="eventChanged(1)"><mat-icon>navigate_next</mat-icon></button>
-                <button mat-icon-button (click)="start()"><mat-icon>play_arrow</mat-icon></button>
-                <button mat-icon-button (click)="stop()"><mat-icon>pause</mat-icon></button>
             </div>
-            <div style="display: flex; justify-content:center; flex-direction: row;">
-                <app-football-pitch style="padding: 10px;" [event]="event"
-                    [home_team]="currentMatch.home_team_name"></app-football-pitch>
+            <div class="mat-card feature-card">
+                <div class="mat-card-content" style="text-align: center; padding: 32px;">
+                    <div class="feature-icon green"><span class="material-icons">groups</span>
+                    </div>
+                    <h3 style="margin: 0 0 16px 0; font-weight: 500;">Team Statistics</h3>
+                    <p style="color: #666; margin: 0; line-height: 1.6;">Comprehensive team performance metrics and
+                        historical data analysis.</p>
+                </div>
             </div>
-        </mat-tab>
-        <mat-tab label="Team Stats">
-
-        </mat-tab>
-        <mat-tab label="Player Stats">
-            <mat-form-field appearance="fill">
-                <mat-label>Playing Style</mat-label>
-                <mat-select [(ngModel)]="selectedStyle">
-                    <mat-option *ngFor="let style of set(playingStyles)" [value]="style">
-                        Style {{ style }}
-                    </mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="fill">
-                <mat-label>Players</mat-label>
-                <mat-select [(ngModel)]="selectedPlayers" multiple>
-                    <mat-option *ngFor="let player of set(stats)" [value]="player">
-                        {{player.player_name}}
-                    </mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-table style="background-color: lightgreen;" [dataSource]="stats" class="mat-elevation-z8">
-                <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
-                    <mat-header-cell *matHeaderCellDef> {{ column }} </mat-header-cell>
-                    <mat-cell *matCellDef="let element"> {{ element[column] }} </mat-cell>
-                </ng-container>
-
-                <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-                <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-
-            </mat-table>
-        </mat-tab>
-
-        <mat-tab label="Possessions">
-            <mat-form-field appearance="outline" style="width: 300px;">
-                <mat-label>Possessions</mat-label>
-                <mat-select (valueChange)="possessionSelected($event)">
-                    <mat-option [value]="">All</mat-option>
-                    @for (poss of possessions; track poss) {
-                    <mat-option [value]="poss.possession">{{poss.possession}}. {{
-                        poss.possession_team_name}}: {{poss.passes}} Passes
-                    </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-            <div><b>Possession style:</b> {{possession.playing_style}}</div>
-            <div>Average pass length: {{ possession.avg_pass_length | number: '1.2-2' }}m</div>
-            <div>Pass accuracy: {{possession.pass_success_rate *100 | number: '1.2-2' }}%</div>
-
-            <app-football-pitch style="padding: 10px;" [possession]="possession"
-                [home_team]="possession.possession_team_name"></app-football-pitch>
-        </mat-tab>
-    </mat-tab-group>
-
-</mat-card>
-}
+            <div class="mat-card feature-card">
+                <div class="mat-card-content" style="text-align: center; padding: 32px;">
+                    <div class="feature-icon purple"><span class="material-icons">bar_chart</span>
+                    </div>
+                    <h3 style="margin: 0 0 16px 0; font-weight: 500;">Data Visualization</h3>
+                    <p style="color: #666; margin: 0; line-height: 1.6;">Interactive charts and graphs to visualize
+                        performance trends and patterns.</p>
+                </div>
+            </div>
+        </div>

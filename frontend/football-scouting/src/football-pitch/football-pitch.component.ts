@@ -29,7 +29,8 @@ export class FootballPitchComponent implements OnInit, OnChanges {
     team_name: string;
   };
 
-  @Input('possession') possession?: any;
+  @Input('possession') eventlist?: any;
+  @Input('player_events') player_events?: any;
   @Input('home_team') home_team: string = '';
 
   constructor() {}
@@ -183,5 +184,19 @@ export class FootballPitchComponent implements OnInit, OnChanges {
       return y * 5;
     }
     return (80 - y) * 5;
+  }
+
+  success(event: any) {
+    if (['Dispossessed', 'Foul Committed', 'Error'].includes(event.event_name))
+      return false;
+    return [
+      null,
+      'Success',
+      'Complete',
+      'Success to team',
+      'Success in Play',
+      'Goal',
+      'Won',
+    ].includes(event.event_outcome);
   }
 }

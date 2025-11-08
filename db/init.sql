@@ -167,4 +167,40 @@ CREATE TABLE playing_times
     minutes INTEGER
 );
 
-
+CREATE TABLE player_stats
+(
+    id INTEGER,
+    minutes INTEGER,
+    pass_90 FLOAT,
+    carry_90 FLOAT,
+    dribble_90 FLOAT,
+    shot_90 FLOAT,
+    duel_90 FLOAT,
+    pressure_90 FLOAT,
+    block_90 FLOAT,
+	ball_recovery_90 FLOAT,
+	interception_90 FLOAT,
+    clearance_90 FLOAT,
+    foul_won_90 FLOAT,
+    foul_commited_90 FLOAT,
+    avg_pass_length FLOAT,
+    longest_forward_pass FLOAT,
+    average_shot_length FLOAT,
+	header_percent FLOAT,
+    xg_90 FLOAT,
+	dribble_percent FLOAT,
+	average_dribble_start_x FLOAT,
+	ground_pass_percent FLOAT,
+	low_pass_percent FLOAT,
+	high_pass_percent FLOAT,
+	goalkeeper FLOAT,
+	center_back FLOAT,
+	wide_back FLOAT,
+	center_midfielder FLOAT,
+	wide_midfielder FLOAT,
+	striker FLOAT,
+	defensive_start_percent FLOAT,
+	middle_start_percent FLOAT,
+	attacking_start_percent FLOAT,
+    cluster VARCHAR(100)
+);

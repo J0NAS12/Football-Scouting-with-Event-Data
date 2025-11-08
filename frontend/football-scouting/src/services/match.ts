@@ -45,14 +45,6 @@ export class MatchService {
     return this.http.get(`${this.apiUrl}/match/stats`, { params });
   }
 
-  public getPlayerStats(match_id = undefined): Observable<any> {
-    let params = new HttpParams();
-    if (match_id !== undefined) {
-      params = params.set('match_id', match_id);
-    }
-    return this.http.get(`${this.apiUrl}/match/playerstats`, { params });
-  }
-
   public getEventwithPlayerPositions(event_id = undefined): Observable<any> {
     let params = new HttpParams();
     if (event_id !== undefined) {

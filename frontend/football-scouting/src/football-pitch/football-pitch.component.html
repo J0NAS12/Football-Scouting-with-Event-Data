@@ -2,7 +2,7 @@
     <defs>
         <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"
             markerUnits="strokeWidth">
-            <polygon points="0 0, 6 2, 0 4" fill="black" />
+            <polygon points="0 0, 6 2, 0 4" fill="context-stroke" />
         </marker>
     </defs>
 </svg>
@@ -24,27 +24,20 @@
         </div>
 
         }
-        @if (!!possession) {
-        <!--
-        @for (e of (possession ? possession.events : []); track e) {
-        <div class="player-position-with-ball" [id]="'poss-'+$index" [matTooltip]="e?.player_name">
-        </div>
-        }
-        -->
+        @if (!!eventlist) {
         <svg height="400" width="600" xmlns="http://www.w3.org/2000/svg"
             style="position: absolute; top: 0; left: 0; z-index: 10;">
-            @for (e of (possession ? possession.events : []); track e) {
+            @for (e of (eventlist ? eventlist : []); track e) {
             @if (e.end_x > 0) {
             <line [attr.x1]="scaleX(e.x, e.team_name == home_team)" [attr.y1]="scaleY(e.y, e.team_name == home_team)"
                 [attr.x2]="scaleX(e.end_x, e.team_name == home_team)"
-                [attr.y2]="scaleY(e.end_y, e.team_name == home_team)"
-                [attr.stroke]="e.team_name == home_team ? 'black' : 'white'" stroke-width="1.5"
+                [attr.y2]="scaleY(e.end_y, e.team_name == home_team)" [attr.stroke]="'black'" stroke-width="1"
                 marker-end="url(#arrowhead)" />
 
             }
 
             <circle [attr.cx]="scaleX(e.x, e.team_name == home_team)" [attr.cy]="scaleY(e.y, e.team_name == home_team)"
-                r="5" [attr.fill]="e.team_name == home_team ? 'blue' : 'red'" class="hover-text-circle"
+                r="3" [attr.fill]="e.team_name == home_team ? 'blue' : 'red'" class="hover-text-circle"
                 style="pointer-events: all; z-index: 11;" />
             <text [attr.x]="scaleX(e.x, e.team_name == home_team)+50"
                 [attr.y]="scaleY(e.y, e.team_name == home_team)+20" font-size="12" fill="white" text-anchor="middle"
@@ -56,6 +49,37 @@
                 <tspan x="0" dy="5px"></tspan>
             </text>
             }
+
+
+        </svg>
+        }
+
+        @if (!!player_events) {
+        <svg height="450" width="600" xmlns="http://www.w3.org/2000/svg"
+            style="position: absolute; top: 0; left: 0; z-index: 10;">
+            @for (e of (player_events ? player_events : []); track e) {
+            @if (e.end_x > 0) {
+            <line [attr.x1]="scaleX(e.x, true)" [attr.y1]="scaleY(e.y, true)" [attr.x2]="scaleX(e.end_x, true)"
+                [attr.y2]="scaleY(e.end_y, true)" [attr.stroke]="success(e) ? 'blue' : 'red'" stroke-width="1"
+                marker-end="url(#arrowhead)" />
+
+
+            }
+
+            <circle [attr.cx]="scaleX(e.x, true)" [attr.cy]="scaleY(e.y, true)" r="3"
+                [attr.fill]="success(e) ? 'blue' : 'red'" class="hover-text-circle"
+                style="pointer-events: all; z-index: 11;" />
+            <text [attr.x]="scaleX(e.x, true)+50" [attr.y]="scaleY(e.y, true)+20" font-size="18" [attr.fill]="'black'"
+                text-anchor="middle" alignment-baseline="middle" class="hover-text">
+                <tspan [attr.x]="scaleX(e.x, true)" dy="0" style="z-index: 12;">
+                    {{e.player_name}}</tspan>
+
+                <tspan style="z-index: 12;" [attr.x]="scaleX(e.x, true)" dy="1.2em">{{e.event_name}}
+                </tspan>
+                <tspan [attr.x]="scaleX(e.x, true)" dy="1.2em" [attr.fill]="'black'">{{e.event_outcome}}</tspan>
+            </text>
+            }
+
 
 
         </svg>

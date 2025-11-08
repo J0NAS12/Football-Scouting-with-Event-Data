@@ -1,0 +1,272 @@
+<h2 id="player-stats-title" style="font-size: 2rem; font-weight: 400; margin-bottom: 32px; color: #333;">
+    Player Statistics</h2><!-- Search Bar -->
+<div class="player-row">
+    <mat-form-field appearance="outline" class="player-select">
+        <mat-label>Select Player</mat-label>
+        <mat-select [value]="selectedPlayer?.id || 0" (valueChange)="playerSelected($event)">
+            @for (player of players; track player) {
+            <mat-option [value]="player.id">{{ player.name }}</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+
+    @if (selectedPlayer && selectedPlayer !== {}) {
+    <div class="player-info">
+        <div>{{ selectedPlayer.minutes }} minutes</div>
+        <div>Position: {{ selectedPlayer.cluster }}</div>
+    </div>
+    }
+</div>
+@if (selectedPlayer && selectedPlayer !== {}) {
+<mat-tab-group [(selectedIndex)]="selectedTabIndex">
+    <mat-tab label=" Individual Stats">
+        <div class="player-stats-container">
+
+            <!-- Player Stats Card -->
+            <mat-card class="player-card" appearance="outlined">
+                <mat-card-header>
+                    <mat-card-title>Player Stats</mat-card-title>
+                </mat-card-header>
+
+
+                <mat-card-content>
+                    <div class="stat-list">
+                        @for (attribute of attr_list; track attribute) {
+                        <div class="stat-item">
+                            <span class="stat-label">{{ attribute[1] | titlecase }}</span>
+                            <span class="stat-value">
+                                {{
+                                attribute.includes('percent')
+                                ? (selectedPlayer[attribute[0]] | percent:'1.0-2')
+                                : (selectedPlayer[attribute[0]] | number:'1.0-2')
+                                }}
+                            </span>
+                        </div>
+                        }
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <!-- Charts & Visualizations -->
+            <div class="charts-section">
+                <mat-card class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </mat-card>
+            </div>
+            <div class="charts-section">
+                <mat-card class="chart-card">
+                    <mat-form-field appearance="outline" class="attribute-select">
+                        <mat-label>Select Attribute</mat-label>
+                        <mat-select (valueChange)="selectAttributeChart($event)">
+                            @for (attribute of attr_list; track attribute) {
+                            <mat-option [value]="attribute[0]">{{ attribute[1] }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                    <div class="chart-container" style="min-height: 500px;">
+                        <canvas id="buckets"></canvas>
+                    </div>
+                </mat-card>
+            </div>
+            <div class="charts-section">
+                <mat-card class="chart-card">
+                    <div class="chart-container" style="min-height: 500px;">
+                        <canvas id="equal-size-buckets"></canvas>
+                    </div>
+                </mat-card>
+            </div>
+
+
+
+        </div>
+    </mat-tab>
+    <mat-tab label="Event distribution">
+        <mat-card style="margin-left: 25%; margin-right: 25%; margin-top: 10px; max-width: 702px;">
+            <mat-card-content>
+                <mat-chip-listbox multiple="true" class="event-chip-list">
+                    @for (eventType of eventTypes; track eventType) {
+                    <mat-chip-option [selectable]="true" [selected]="eventType.selected"
+                        (click)="chipSelected(eventType)">
+                        {{ eventType.name }}
+                    </mat-chip-option>
+                    }
+                </mat-chip-listbox>
+
+                <app-football-pitch [player_events]="playerEvents" [home_team]="''" class="pitch-display">
+                </app-football-pitch>
+            </mat-card-content>
+        </mat-card>
+    </mat-tab>
+    <mat-tab label="Similar players">
+        <table mat-table [dataSource]="similarPlayers" class="mat-elevation-z8">
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef> ID </th>
+                <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="player_name">
+                <th mat-header-cell *matHeaderCellDef> Player </th>
+                <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="minutes">
+                <th mat-header-cell *matHeaderCellDef> Minutes </th>
+                <td mat-cell *matCellDef="let element"> {{element.minutes}} </td>
+            </ng-container>
+
+            <!-- Type ID Column -->
+            <ng-container matColumnDef="analyze">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let element">
+                    <button mat-button (click)="playerSelected(element.id)">Analyze player</button>
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="compare">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let element">
+                    <button mat-button (click)="otherPlayerSelected(element.id)">Compare</button>
+                </td>
+            </ng-container>
+
+            <!-- Header and Row -->
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+    </mat-tab>
+    <mat-tab label="Comparison">
+        <div class="comparison-container">
+
+            <!-- Player 1 Card -->
+            <mat-card class="player-card" appearance="outlined">
+                <mat-card-header>
+                    <mat-card-title>{{ playerName(this.selectedPlayer.id) || 'Player 1' }}</mat-card-title>
+                    <mat-card-subtitle>Selected Player</mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-divider></mat-divider>
+
+                <mat-card-content>
+                    <div class="stat-list">
+                        @for (attribute of attr_list; track attribute) {
+                        <div class="stat-item">
+                            <span class="stat-label">{{ attribute[1] | titlecase }}</span>
+                            <span class="stat-value">
+                                {{
+                                attribute.includes('percent')
+                                ? (selectedPlayer[attribute[0]] | percent:'1.0-2')
+                                : (selectedPlayer[attribute[0]] | number:'1.0-2')
+                                }}
+                            </span>
+                        </div>
+                        }
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <!-- Comparison Stats -->
+            <mat-card class="comparison-stats-card" appearance="outlined">
+                <mat-card-header>
+                    <mat-card-title>Stat Comparison</mat-card-title>
+                </mat-card-header>
+
+                <mat-card-content>
+                    <div class="comparison-list">
+                        @for (attribute of attr_list; track attribute) {
+                        <div class="comparison-row">
+                            <div class="attribute-name">{{ attribute[1] | titlecase }}</div>
+
+                            <div class="comparison-bar">
+                                <div class="player-bar player1"
+                                    [style.width.%]="getComparisonWidth(selectedPlayer[attribute[0]], attribute[0], 'selected')"
+                                    [ngStyle]="{
+              backgroundColor:
+                selectedPlayer[attribute[0]] > otherPlayer[attribute[0]]
+                  ? 'green'
+                  : selectedPlayer[attribute[0]] < otherPlayer[attribute[0]]
+                  ? 'red'
+                  : 'gray'
+            }"></div>
+
+                                <div class="player-bar player2"
+                                    [style.width.%]="getComparisonWidth(otherPlayer[attribute[0]], attribute[0], 'other')"
+                                    [ngStyle]="{
+              backgroundColor:
+                otherPlayer[attribute[0]] > selectedPlayer[attribute[0]]
+                  ? 'green'
+                  : otherPlayer[attribute[0]] < selectedPlayer[attribute[0]]
+                  ? 'red'
+                  : 'gray'
+            }"></div>
+                            </div>
+
+                            <div class="comparison-values">
+                                <span [ngStyle]="{
+              color:
+                selectedPlayer[attribute[0]] > otherPlayer[attribute[0]]
+                  ? 'green'
+                  : selectedPlayer[attribute[0]] < otherPlayer[attribute[0]]
+                  ? 'red'
+                  : 'inherit'
+            }">
+                                    {{
+                                    attribute.includes('percent')
+                                    ? (selectedPlayer[attribute[0]] | percent: '1.0-2')
+                                    : (selectedPlayer[attribute[0]] | number: '1.0-2')
+                                    }}
+                                </span>
+
+                                <span [ngStyle]="{
+              color:
+                otherPlayer[attribute[0]] > selectedPlayer[attribute[0]]
+                  ? 'green'
+                  : otherPlayer[attribute[0]] < selectedPlayer[attribute[0]]
+                  ? 'red'
+                  : 'inherit'
+            }">
+                                    {{
+                                    attribute.includes('percent')
+                                    ? (otherPlayer[attribute[0]] | percent: '1.0-2')
+                                    : (otherPlayer[attribute[0]] | number: '1.0-2')
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+
+            <!-- Player 2 Card -->
+            <mat-card class="player-card" appearance="outlined">
+                <mat-card-header>
+                    <mat-card-title>{{playerName(this.otherPlayer.id) || 'Player 2' }}</mat-card-title>
+                    <mat-card-subtitle>Comparison Player</mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-divider></mat-divider>
+
+                <mat-card-content>
+                    <div class="stat-list">
+                        @for (attribute of attr_list; track attribute) {
+                        <div class="stat-item">
+                            <span class="stat-label">{{ attribute[1] | titlecase }}</span>
+                            <span class="stat-value">
+                                {{
+                                attribute[0].includes('percent')
+                                ? (otherPlayer[attribute[0]] | percent:'1.0-2')
+                                : (otherPlayer[attribute[0]] | number:'1.0-2')
+                                }}
+                            </span>
+                        </div>
+                        }
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </mat-tab>
+</mat-tab-group>
+}

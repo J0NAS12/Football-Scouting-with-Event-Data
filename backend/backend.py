@@ -1,15 +1,16 @@
 import dataclasses
-from sqlalchemy import and_, func, or_
-from typing import Union
+import numpy as np
+from sqlalchemy import and_, func, not_, or_, select
+from typing import Dict, Union
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from requests import Session
 from sqlalchemy import String
 from db_connection import get_db
-from sql_schemas import Competitions, EventOutcomes, EventSubTypes, EventTypes, Matches, Events, Person, Possessions, Teams, PlayerPositions, Positions, PlayingTimes
-from pydantic_schemas import CompetitionResponse, EventResponse, EventResponseWithPlayerPositions, MatchListResponse, MatchResponse, PossessionsResponse, PossessionsResponseWithEvents, Team
+from sql_schemas import Competitions, EventOutcomes, EventSubTypes, EventTypes, Matches, Events, Person, PlayerStats, Possessions, Teams, PlayerPositions, Positions, PlayingTimes
+from pydantic_schemas import CompetitionResponse, EnumResponse, EventResponse, EventResponseWithPlayerPositions, MatchListResponse, MatchResponse, PlayerStatBuckets, PossessionsResponse, PossessionsResponseWithEvents, Team
 from sqlalchemy.orm import aliased
 
 app = FastAPI()
@@ -352,28 +353,323 @@ def event_summary_by_player(db: Session = Depends(get_db)):
 
 @app.get("/player_possible_actions/{player_id}", response_model=list)
 def player_possible_actions(player_id: int, db: Session = Depends(get_db)):
-        filter_possible_actions = and_(
-            Events.match_id == PlayingTimes.match_id,
-            or_(
-                Events.period > PlayingTimes.start_period,
-                and_(
-                    Events.period == PlayingTimes.start_period,
-                    Events.timestamp >= PlayingTimes.start_time
-                )
-            ),
-            or_(
-                Events.period < PlayingTimes.end_period,
-                and_(
-                    Events.period == PlayingTimes.end_period,
-                    Events.timestamp <= PlayingTimes.end_time
-                )
+    filter_possible_actions = and_(
+        Events.match_id == PlayingTimes.match_id,
+        or_(
+            Events.period > PlayingTimes.start_period,
+            and_(
+                Events.period == PlayingTimes.start_period,
+                Events.timestamp >= PlayingTimes.start_time
+            )
+        ),
+        or_(
+            Events.period < PlayingTimes.end_period,
+            and_(
+                Events.period == PlayingTimes.end_period,
+                Events.timestamp <= PlayingTimes.end_time
             )
         )
-        return (
-            db.query(
-                Events.id,
-                Events.match_id,
-                Events.player_id
-            ).join(PlayingTimes, filter_possible_actions)
-            .filter(PlayingTimes.player_id == player_id)
+    )
+    return (
+        db.query(
+            Events.id,
+            Events.match_id,
+            Events.player_id
+        ).join(PlayingTimes, filter_possible_actions)
+        .filter(PlayingTimes.player_id == player_id)
+    )
+
+@app.get("/players", response_model=list[dict])
+def available_players(cluster: str= "-1", db: Session = Depends(get_db)):
+    filters = []
+    query = db.query(
+            PlayerStats.id,
+            Person.name,
+            PlayerStats.minutes
+        ).join(Person, PlayerStats.id == Person.id)
+    if cluster != "-1":
+        filters.append(PlayerStats.cluster == cluster)
+    if filters:
+        query = query.filter(*filters)
+    results = query.all()
+    return [dict(row._mapping) for row in results]
+
+@app.get("/player", response_model=dict)
+def statistics_of_selected_player(id: int, db: Session = Depends(get_db)):
+    result = (
+        db.query(PlayerStats)
+        .filter(PlayerStats.id == id)
+        .first()
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Player not found")
+    
+    return {k: v for k, v in result.__dict__.items() if not k.startswith("_")}
+
+
+@app.get("/player/events", response_model=list[EventResponse])
+def list_events_of_a_match(player_id: int, type_id: list[int] = Query(default=[]),db: Session = Depends(get_db)):
+    print(f"Type{type_id}")
+    filters = [Events.player_id == player_id]
+    print(f"Type{type_id}")
+    if type_id:  
+        filters.append(Events.type_id.in_(type_id))
+
+    PossessionTeam = aliased(Teams, name="possession_team")
+    return (
+        db.query(
+            Events.id,
+            Events.type_id,
+            Events.match_id,
+            Events.x,
+            Events.y,
+            Events.end_x,
+            Events.end_y,
+            Events.player_id,
+            Events.position_id,
+            Events.duration,
+            Events.team_id,
+            Events.outcome_id,
+            Events.timestamp,
+            Events.period,
+            Events.sub_type_id,
+            EventTypes.name.label("event_name"),
+            Person.name.label("player_name"),
+            EventSubTypes.name.label("sub_type_name"),
+            Teams.name.label("team_name"),
+            Positions.name.label("position"),
+            PossessionTeam.name.label("possession_team_name"),
+            EventOutcomes.name.label('event_outcome')
         )
+        .join(EventTypes, Events.type_id == EventTypes.id)
+        .join(Person, Events.player_id == Person.id)
+        .outerjoin(EventSubTypes, Events.sub_type_id == EventSubTypes.id)
+        .join(Teams, Events.team_id == Teams.id)
+        .outerjoin(PossessionTeam, Events.team_id == PossessionTeam.id)
+        .outerjoin(Positions, Events.position_id == Positions.id)
+        .outerjoin(EventOutcomes, Events.outcome_id == EventOutcomes.id)
+        .filter(*filters)
+        .all()
+    )
+
+@app.get("/eventtypes", response_model=list[EnumResponse])
+def get_all_event_types(db: Session = Depends(get_db)):
+    query = db.query(
+            EventTypes
+        ).filter(not_(EventTypes.id.in_([18,19,20,24,25,26,27,28,34,35,36,39,40,41])))
+    return query.all()
+
+
+@app.get("/player/{player_id}/stat-buckets/{stat_name}", response_model=dict)
+def get_stat_buckets(
+    player_id: int,
+    stat_name: str,
+    num_buckets: int = 10,
+    db: Session = Depends(get_db),
+):
+    stat_col = getattr(PlayerStats, stat_name)
+
+    # --- Get min and max of the stat ---
+    min_val, max_val = db.query(
+        func.min(stat_col),
+        func.max(stat_col)
+    ).first()
+
+    if min_val is None or max_val is None:
+        return {
+            "player_id": player_id,
+            "stat_name": stat_name,
+            "player_bucket_width": 0,
+            "player_bucket_size": 0,
+            "width_buckets": [],
+            "size_buckets": []
+        }
+
+    # ============================================================
+    # 1️⃣ Equal-WIDTH buckets (same value range width)
+    # ============================================================
+    width = (max_val - min_val) / num_buckets
+
+    stmt = select(
+        PlayerStats.id,
+        func.width_bucket(stat_col, min_val, max_val, num_buckets).label("bucket")
+    )
+    all_buckets = db.execute(stmt).all()
+
+    bucket_counts_width: Dict[int, int] = {}
+    player_bucket_width = 0
+    for row in all_buckets:
+        b = row._mapping["bucket"]
+        bucket_counts_width[b] = bucket_counts_width.get(b, 0) + 1
+        if row._mapping["id"] == player_id:
+            player_bucket_width = b
+
+    width_buckets = []
+    for b in range(1, num_buckets + 1):
+        start = min_val + (b - 1) * width
+        end = min_val + b * width
+        count = bucket_counts_width.get(b, 0)
+        width_buckets.append({
+            "bucket": b,
+            "start": start,
+            "end": end,
+            "count": count
+        })
+
+    all_stats = db.query(PlayerStats.id, stat_col).filter(stat_col.isnot(None)).all()
+    if not all_stats:
+        return {
+            "player_id": player_id,
+            "stat_name": stat_name,
+            "player_bucket_width": player_bucket_width,
+            "player_bucket_size": 0,
+            "width_buckets": width_buckets,
+            "size_buckets": []
+        }
+
+    ids, values = zip(*all_stats)
+    values = np.array(values, dtype=float)
+
+    # Compute percentile boundaries
+    quantiles = np.linspace(0, 1, num_buckets + 1)
+    boundaries = np.quantile(values, quantiles)
+
+    size_buckets = []
+    player_bucket_size = 0
+    bucket_counts_size: Dict[int, int] = {}
+
+    for b in range(num_buckets):
+        start_val = float(boundaries[b])
+        end_val = float(boundaries[b + 1])
+        in_bucket = [
+            pid for pid, val in all_stats
+            if (b == 0 and val >= start_val or b > 0 and val > start_val)
+            and (b == num_buckets - 1 or val <= end_val)
+        ]
+        count = len(in_bucket)
+        bucket_counts_size[b + 1] = count
+
+        size_buckets.append({
+            "bucket": b + 1,
+            "start": start_val,
+            "end": end_val,
+            "count": count
+        })
+
+        if player_id in in_bucket:
+            player_bucket_size = b + 1
+
+    return {
+        "player_id": player_id,
+        "stat_name": stat_name,
+        "player_bucket_width": player_bucket_width,
+        "player_bucket_size": player_bucket_size,
+        "width_buckets": width_buckets,
+        "size_buckets": size_buckets
+    }
+
+
+@app.get("/player/{player_id}/stat-buckets-cluster/{stat_name}", response_model=dict)
+def get_stat_buckets(
+    player_id: int,
+    stat_name: str,
+    num_buckets: int = 10,
+    db: Session = Depends(get_db),
+):
+    # --- Get the player to find their cluster ---
+    player = db.query(PlayerStats).filter(PlayerStats.id == player_id).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    player_cluster = player.cluster  # <-- get the cluster
+
+    # --- Filter all stats to only players in that cluster ---
+    stat_col = getattr(PlayerStats, stat_name)
+    all_stats = (
+        db.query(PlayerStats.id, stat_col)
+        .filter(PlayerStats.cluster == player_cluster)
+        .filter(stat_col.isnot(None))
+        .all()
+    )
+
+    if not all_stats:
+        return {
+            "player_id": player_id,
+            "stat_name": stat_name,
+            "player_bucket_width": 0,
+            "player_bucket_size": 0,
+            "width_buckets": [],
+            "size_buckets": []
+        }
+
+    # --- Min and Max for equal-width buckets (only for cluster) ---
+    min_val, max_val = (
+        db.query(func.min(stat_col), func.max(stat_col))
+        .filter(PlayerStats.cluster == player_cluster)
+        .first()
+    )
+
+    width = (max_val - min_val) / num_buckets
+
+    # --- Equal-width buckets ---
+    stmt = select(
+        PlayerStats.id,
+        func.width_bucket(stat_col, min_val, max_val, num_buckets).label("bucket")
+    ).filter(PlayerStats.cluster == player_cluster)
+
+    all_buckets = db.execute(stmt).all()
+
+    bucket_counts_width: Dict[int, int] = {}
+    player_bucket_width = 0
+    for row in all_buckets:
+        b = row._mapping["bucket"]
+        bucket_counts_width[b] = bucket_counts_width.get(b, 0) + 1
+        if row._mapping["id"] == player_id:
+            player_bucket_width = b
+
+    width_buckets = []
+    for b in range(1, num_buckets + 1):
+        start = min_val + (b - 1) * width
+        end = min_val + b * width
+        count = bucket_counts_width.get(b, 0)
+        width_buckets.append({
+            "bucket": b,
+            "start": start,
+            "end": end,
+            "count": count
+        })
+
+    # --- Equal-size (quantile) buckets ---
+    ids, values = zip(*all_stats)
+    values = np.array(values, dtype=float)
+    quantiles = np.linspace(0, 1, num_buckets + 1)
+    boundaries = np.quantile(values, quantiles)
+
+    size_buckets = []
+    player_bucket_size = 0
+    for b in range(num_buckets):
+        start_val = float(boundaries[b])
+        end_val = float(boundaries[b + 1])
+        in_bucket = [
+            pid for pid, val in all_stats
+            if (b == 0 and val >= start_val or b > 0 and val > start_val)
+            and (b == num_buckets - 1 or val <= end_val)
+        ]
+        count = len(in_bucket)
+        size_buckets.append({
+            "bucket": b + 1,
+            "start": start_val,
+            "end": end_val,
+            "count": count
+        })
+        if player_id in in_bucket:
+            player_bucket_size = b + 1
+
+    return {
+        "player_id": player_id,
+        "stat_name": stat_name,
+        "player_bucket_width": player_bucket_width,
+        "player_bucket_size": player_bucket_size,
+        "width_buckets": width_buckets,
+        "size_buckets": size_buckets
+    }

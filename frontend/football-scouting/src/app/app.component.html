@@ -1,1 +1,18 @@
-<router-outlet />
+<div class="app-container"><!-- Header Toolbar -->
+    <mat-toolbar class="toolbar-center">
+        <span id="site-title" class="toolbar-title">Football Scouting</span>
+        <button mat-button class="example-icon" routerLink="/">
+            <mat-icon>home</mat-icon>Home
+        </button>
+        <button mat-button class="example-icon" routerLink="/player">
+            <mat-icon>person</mat-icon>Player Stats
+        </button>
+        <button mat-button class="example-icon" routerLink="/match">
+            <mat-icon>groups</mat-icon> Match Stats
+        </button>
+        <button mat-button class="example-icon" routerLink="/browse">
+            <mat-icon>search</mat-icon>Browse
+        </button>
+    </mat-toolbar>
+    <router-outlet />
+</div>

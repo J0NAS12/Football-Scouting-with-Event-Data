@@ -11,6 +11,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { PlayerService } from '../services/player';
 
 @Component({
   selector: 'app-home',
@@ -33,7 +34,10 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 export class HomeComponent implements OnInit {
   Object = Object;
 
-  constructor(private matchService: MatchService) {}
+  constructor(
+    private matchService: MatchService,
+    private playerService: PlayerService
+  ) {}
 
   playing = false;
   matches: any[] = [];
@@ -81,7 +85,7 @@ export class HomeComponent implements OnInit {
       this.events = x;
       this.eventSelected(this.events[this.event_index].id);
     });
-    this.matchService.getPlayerStats(match).subscribe((x) => {
+    this.playerService.getPlayerStats(match).subscribe((x) => {
       this.stats = x;
       this.displayedColumns = Object.keys(this.stats[0]).filter(
         (k) => !k.endsWith('_id')
