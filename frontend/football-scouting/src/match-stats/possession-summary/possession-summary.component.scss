@@ -1,0 +1,9 @@
+canvas {
+  width: 600px !important;
+}
+
+.page {
+  max-width: calc(100% - 900px);
+  flex-wrap: wrap;
+  min-width: 1500px;
+}

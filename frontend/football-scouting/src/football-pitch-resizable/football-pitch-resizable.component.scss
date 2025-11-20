@@ -1,0 +1,200 @@
+body {
+  margin: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(sandybrown, maroon);
+  --line: 0.3em solid white;
+}
+
+.container {
+  --scale: attr(data-scale number, 1);
+  width: calc(620px * var(--scale));
+  background-color: green;
+  font-size: calc(5px * var(--scale));
+  padding: calc(25px * var(--scale));
+  display: flex;
+  flex-direction: row;
+}
+
+.container span {
+  display: block;
+}
+
+.goal {
+  margin-top: calc((450px / 2 - 35px) * var(--scale));
+  margin-bottom: calc((450px / 2 - 35px) * var(--scale));
+  background-color: white;
+  width: calc(10px * var(--scale));
+  height: calc(70px * var(--scale));
+}
+
+.field {
+  border: 1px solid white;
+  position: relative;
+  overflow: hidden;
+  width: calc(600px * var(--scale));
+  height: calc(450px * var(--scale));
+  z-index: 1;
+}
+
+.halfway-line {
+  width: calc(300px * var(--scale));
+  height: calc(450px * var(--scale));
+  border-right: 1px solid white;
+}
+
+.centre-circle {
+  width: calc(100px * var(--scale));
+  height: calc(100px * var(--scale));
+  border: 1px solid white;
+  border-radius: 50%;
+  position: absolute;
+  top: calc(175px * var(--scale));
+  left: calc((600px - 100px) / 2 * var(--scale));
+}
+
+.centre-mark {
+  width: calc(10px * var(--scale));
+  height: calc(10px * var(--scale));
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: calc((450px / 2 - 5px) * var(--scale));
+  left: calc((600px / 2 - 5px) * var(--scale));
+}
+
+.penalty-mark {
+  width: calc(10px * var(--scale));
+  height: calc(10px * var(--scale));
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: calc((450px / 2 - 5px) * var(--scale));
+  left: calc(60px * var(--scale));
+}
+
+.penalty-area {
+  width: calc(90px * var(--scale));
+  height: calc(250px * var(--scale));
+  border: 2px solid white;
+  position: absolute;
+  top: calc((450px - 250px) / 2 * var(--scale));
+  left: 0;
+  background-color: green;
+}
+
+.penalty-arc {
+  width: calc(100px * var(--scale));
+  height: calc(100px * var(--scale));
+  border-right: 1px solid white;
+  border-radius: 50%;
+  position: absolute;
+  top: calc(175px * var(--scale));
+  left: calc(60px - 50px * var(--scale));
+  z-index: -1;
+}
+
+.goal-area {
+  width: calc(30px * var(--scale));
+  height: calc(115px * var(--scale));
+  border: 2px solid white;
+  position: absolute;
+  top: calc((450px - 115px) / 2 * var(--scale));
+  left: 0;
+}
+
+.corner-arc::after,
+.corner-arc::before {
+  content: "";
+  position: absolute;
+  width: calc(25px * var(--scale));
+  height: calc(25px * var(--scale));
+  border: calc(1.5px * var(--scale)) solid white;
+  border-radius: 50%;
+  left: calc(-12.5px * var(--scale));
+}
+
+.corner-arc::before {
+  top: calc(-12.5px * var(--scale));
+}
+
+.corner-arc::after {
+  top: calc((450px - 15px) * var(--scale));
+}
+
+.right {
+  position: absolute;
+  top: 0;
+  left: calc(300px * var(--scale));
+  transform: rotateY(180deg);
+  width: calc(300px * var(--scale));
+}
+
+.player-position {
+  position: absolute;
+  width: calc(10px * var(--scale));
+  height: calc(10px * var(--scale));
+  background-color: blue;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.player-position-with-ball {
+  position: absolute;
+  width: calc(10px * var(--scale));
+  height: calc(10px * var(--scale));
+  border: calc(2px * var(--scale)) solid black;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.ball-position-end,
+.ball-position {
+  position: absolute;
+  width: calc(6px * var(--scale));
+  height: calc(6px * var(--scale));
+  border: calc(2px * var(--scale)) solid black;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.ball-position {
+  background-color: white;
+}
+
+/* Animation */
+:root {
+  --endX: 0px;
+  --endY: 0px;
+  --duration: 1s;
+}
+
+@keyframes ballanimation {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(var(--endX), var(--endY));
+  }
+}
+
+.animate {
+  animation: ballanimation var(--duration) linear forwards;
+}
+
+.hover-text {
+  opacity: 0;
+  display: none;
+  transition: opacity 0.3s ease;
+}
+
+.hover-text-circle:hover + .hover-text {
+  display: block;
+  opacity: 1;
+}
+
+.hover-text:hover {
+  font-weight: bold;
+  fill: yellow;
+}

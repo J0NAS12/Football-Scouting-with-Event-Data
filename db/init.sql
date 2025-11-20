@@ -202,5 +202,16 @@ CREATE TABLE player_stats
 	defensive_start_percent FLOAT,
 	middle_start_percent FLOAT,
 	attacking_start_percent FLOAT,
+    pass_percent FLOAT,
+    duel_rate_percent FLOAT,
+    save_percent FLOAT,
+    shot_on_target_percent FLOAT,
+    shot_goal_percent FLOAT,
+    pass_success_rate_percent FLOAT,
+    extra_shots_percent FLOAT,
+    first_time_shots_percent FLOAT,
+    shots_on_target_percent FLOAT,
+    assists_90 FLOAT,
+    goals_90 FLOAT,
     cluster VARCHAR(100)
 );

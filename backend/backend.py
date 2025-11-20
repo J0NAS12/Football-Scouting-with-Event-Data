@@ -1,4 +1,5 @@
 import dataclasses
+import random
 import numpy as np
 from sqlalchemy import and_, func, not_, or_, select
 from typing import Dict, Union
@@ -137,55 +138,105 @@ def event_summary_by_team(match_id: int, db: Session = Depends(get_db)):
     return event_counts_list
 
 @app.get("/match/playerstats", response_model=list)
-def match_summary_by_player(match_id: int, db: Session = Depends(get_db)):
-    filter_successful_pass = and_(
-        EventTypes.name == 'Pass',
-        EventOutcomes.name == None
-    )
-    event_counts = (
+def match_summary_by_player(
+    match_id: int,
+    playing_style: str = None,
+    db: Session = Depends(get_db),
+):
+    # Base query
+    query = (
         db.query(
             Events.team_id,
             Teams.name.label("team_name"),
             Events.player_id,
             Person.name.label("player_name"),
-            Possessions.playing_style,
             func.count().filter(EventTypes.name == 'Pass').label('total_passes'),
-            func.count().filter(filter_successful_pass).label('successful_passes'),
+            func.count().filter(and_(EventTypes.name == 'Pass', EventOutcomes.name == None)).label('successful_passes'),
             func.count().filter(EventTypes.name == 'Shot').label('total_shots'),
             func.count().filter(EventOutcomes.name == 'Goal').label('total_goals'),
-            func.count().filter(EventSubTypes.name == "Corner").label('corners')
+            func.count().filter(EventSubTypes.name == 'Corner').label('corners'),
+            func.count().filter(EventTypes.name == 'Dribble').label('total_dribbles'),
+            func.count().filter(and_(EventTypes.name == 'Dribble', EventOutcomes.name == 'Complete')).label('successful_dribbles'),
+            func.count().filter(EventTypes.name == 'Duel').label('duels_total'),
+            func.count().filter(and_(EventTypes.name == 'Duel', EventOutcomes.name == 'Won')).label('duels_won'),
+            func.count().filter(EventTypes.name == 'Tackle').label('tackles'),
+            func.count().filter(EventTypes.name == 'Interception').label('interceptions'),
+            func.count().filter(EventTypes.name == 'Ball Recovery').label('ball_recoveries'),
+            func.count().filter(EventTypes.name == 'Clearance').label('clearances'),
+            func.count().filter(EventTypes.name == 'Block').label('blocks'),
+            func.count().filter(EventTypes.name == 'Foul Committed').label('fouls_committed'),
+            func.count().filter(EventTypes.name == 'Foul Won').label('fouls_won'),
+
+            func.min(Possessions.playing_style).label("playing_style"),
         )
         .join(EventTypes, Events.type_id == EventTypes.id)
         .outerjoin(EventSubTypes, Events.sub_type_id == EventSubTypes.id)
+        .outerjoin(EventOutcomes, Events.outcome_id == EventOutcomes.id)
         .join(Teams, Events.team_id == Teams.id)
         .join(Person, Events.player_id == Person.id)
         .join(Possessions, and_(
             Events.match_id == Possessions.match_id,
             Events.possession == Possessions.possession
         ))
-        .outerjoin(EventOutcomes, Events.outcome_id == EventOutcomes.id)
+
         .filter(Events.match_id == match_id)
-        .group_by(Events.team_id, Teams.name, Events.player_id, Person.name, Possessions.playing_style)
-        .all()
     )
-    event_counts_list = []
-    
-    for row in event_counts:
-        total_passes = row.total_passes or 0
-        successful_passes = row.successful_passes or 0
-        pass_accuracy = (successful_passes / total_passes) if total_passes > 0 else None
-        event_counts_list.append({
-                'team_id': row.team_id,
-                'team_name': row.team_name,
-                'playing_style': row.playing_style,
-                'player_name': row.player_name,
-                'total_passes': row.total_passes,
-                'pass_accuracy': round(pass_accuracy*100, 2) if pass_accuracy is not None else None,
-                'total_shots': row.total_shots,
-                'total_goals': row.total_goals,
-                'corners': row.corners
-            })
-    return event_counts_list
+
+    '''func.sum(Shots.statsbomb_xg).label('expected_goals'),
+    func.count().filter(Passes.assisted_shot_id.isnot(None)).label('assists'),
+    func.count().filter(Shots.key_pass_id.isnot(None)).label('key_passes'),
+    func.avg(func.sqrt((Events.x - Events.end_x)**2 + (Events.y - Events.end_y)**2)).label('avg_event_distance'),'''
+    '''.outerjoin(Shots, Events.id == Shots.id)
+    .outerjoin(Passes, Events.id == Passes.id)'''
+
+    # Optional filter by playing style
+    if playing_style is not None and playing_style != "-1":
+        query = query.filter(Possessions.playing_style == playing_style)
+
+    # Group per player (not per style)
+    query = query.group_by(
+        Events.team_id,
+        Teams.name,
+        Events.player_id,
+        Person.name
+    )
+
+    rows = query.all()
+    results = []
+
+    for row in rows:
+        # Compute success rates
+        pass_acc = (row.successful_passes / row.total_passes) if row.total_passes else None
+        dribble_acc = (row.successful_dribbles / row.total_dribbles) if row.total_dribbles else None
+        duel_acc = (row.duels_won / row.duels_total) if row.duels_total else None
+
+        results.append({
+            "team_id": row.team_id,
+            "team_name": row.team_name,
+            "player_name": row.player_name,
+            "playing_style": row.playing_style,
+            "total_passes": row.total_passes,
+            "successful_passes": row.successful_passes,
+            "pass_accuracy_percent": round(pass_acc * 100, 2) if pass_acc else None,
+            "total_shots": row.total_shots,
+            "total_goals": row.total_goals,
+            "corners": row.corners,
+            "total_dribbles": row.total_dribbles,
+            "successful_dribbles": row.successful_dribbles,
+            "dribble_success_percent": round(dribble_acc * 100, 2) if dribble_acc else None,
+            "duels_total": row.duels_total,
+            "duels_won": row.duels_won,
+            "duel_success_percent": round(duel_acc * 100, 2) if duel_acc else None,
+            "tackles": row.tackles,
+            "interceptions": row.interceptions,
+            "ball_recoveries": row.ball_recoveries,
+            "clearances": row.clearances,
+            "blocks": row.blocks,
+            "fouls_committed": row.fouls_committed,
+            "fouls_won": row.fouls_won,
+        })
+
+    return results
 
 @app.get("/teams", response_model=list[Team])
 def list_matches_in_a_competition( db: Session = Depends(get_db)):
@@ -250,7 +301,11 @@ def get_all_possessions_of_a_match(match_id: int, db: Session = Depends(get_db))
 
 @app.get("/match/possession", response_model=PossessionsResponseWithEvents)
 def get_possession_style_with_events(match_id: int, possession: int, db: Session = Depends(get_db)):
+    return fetch_possession_with_events(match_id, possession, db)
+
+def fetch_possession_with_events(match_id: int, possession: int, db: Session):
     PossessionTeam = aliased(Teams, name="possession_team")
+
     events = (
         db.query(
             Events.id,
@@ -282,17 +337,61 @@ def get_possession_style_with_events(match_id: int, possession: int, db: Session
         .filter(Events.possession == possession)
         .all()
     )
-    possession = (db.query(Possessions)
+
+    possession_row = (
+        db.query(Possessions)
         .filter(Possessions.match_id == match_id)
         .filter(Possessions.possession == possession)
         .first()
     )
-    if possession is None:
+
+    if not possession_row:
         raise HTTPException(status_code=404, detail="Possession not found")
-    possession_dict = possession.__dict__
-    possession_dict['events'] = events
-    possession_response = PossessionsResponseWithEvents(**possession_dict)
-    return possession_response
+
+    possession_dict = possession_row.__dict__.copy()
+    possession_dict["events"] = events
+
+    # -----------------------------
+    # Compute summary stats
+    # -----------------------------
+    from collections import defaultdict
+    import math
+
+    player_involvements = defaultdict(int)
+    player_distance = defaultdict(float)
+    event_counts = defaultdict(int)
+
+    for e in events:
+        # count involvement
+        player_involvements[e.player_name] += 1
+
+        # count event types
+        event_counts[e.event_name] += 1
+
+        # calculate distance if end_x/y are valid
+        if e.end_x is not None and e.end_x > 0 and e.end_y is not None and e.end_y > 0:
+            dx = e.end_x - e.x
+            dy = e.end_y - e.y
+            dist = math.sqrt(dx**2 + dy**2)
+            player_distance[e.player_name] += dist
+
+    possession_dict["summary_stats"] = {
+        "player_involvements": dict(player_involvements),
+        "player_distance": dict(player_distance),
+        "event_counts": dict(event_counts),
+        "total_events": len(events),
+        "average_pass_length": (
+            sum(
+                math.sqrt((e.end_x - e.x) ** 2 + (e.end_y - e.y) ** 2)
+                for e in events
+                if e.event_name.lower() == "pass" and e.end_x > 0
+            )
+            / max(1, sum(1 for e in events if e.event_name.lower() == "pass" and e.end_x > 0))
+        ),
+    }
+
+    return PossessionsResponseWithEvents(**possession_dict)
+
 
 @app.get("/playerstats", response_model=list)
 def event_summary_by_player(db: Session = Depends(get_db)):
@@ -461,215 +560,145 @@ def get_all_event_types(db: Session = Depends(get_db)):
 
 
 @app.get("/player/{player_id}/stat-buckets/{stat_name}", response_model=dict)
-def get_stat_buckets(
+def get_stat_buckets_combined(
     player_id: int,
     stat_name: str,
-    num_buckets: int = 10,
+    num_buckets_width: int = 10,
+    num_buckets_size: int = 50,
     db: Session = Depends(get_db),
 ):
     stat_col = getattr(PlayerStats, stat_name)
 
-    # --- Get min and max of the stat ---
-    min_val, max_val = db.query(
-        func.min(stat_col),
-        func.max(stat_col)
-    ).first()
-
-    if min_val is None or max_val is None:
-        return {
-            "player_id": player_id,
-            "stat_name": stat_name,
-            "player_bucket_width": 0,
-            "player_bucket_size": 0,
-            "width_buckets": [],
-            "size_buckets": []
-        }
-
-    # ============================================================
-    # 1️⃣ Equal-WIDTH buckets (same value range width)
-    # ============================================================
-    width = (max_val - min_val) / num_buckets
-
-    stmt = select(
-        PlayerStats.id,
-        func.width_bucket(stat_col, min_val, max_val, num_buckets).label("bucket")
-    )
-    all_buckets = db.execute(stmt).all()
-
-    bucket_counts_width: Dict[int, int] = {}
-    player_bucket_width = 0
-    for row in all_buckets:
-        b = row._mapping["bucket"]
-        bucket_counts_width[b] = bucket_counts_width.get(b, 0) + 1
-        if row._mapping["id"] == player_id:
-            player_bucket_width = b
-
-    width_buckets = []
-    for b in range(1, num_buckets + 1):
-        start = min_val + (b - 1) * width
-        end = min_val + b * width
-        count = bucket_counts_width.get(b, 0)
-        width_buckets.append({
-            "bucket": b,
-            "start": start,
-            "end": end,
-            "count": count
-        })
-
-    all_stats = db.query(PlayerStats.id, stat_col).filter(stat_col.isnot(None)).all()
-    if not all_stats:
-        return {
-            "player_id": player_id,
-            "stat_name": stat_name,
-            "player_bucket_width": player_bucket_width,
-            "player_bucket_size": 0,
-            "width_buckets": width_buckets,
-            "size_buckets": []
-        }
-
-    ids, values = zip(*all_stats)
-    values = np.array(values, dtype=float)
-
-    # Compute percentile boundaries
-    quantiles = np.linspace(0, 1, num_buckets + 1)
-    boundaries = np.quantile(values, quantiles)
-
-    size_buckets = []
-    player_bucket_size = 0
-    bucket_counts_size: Dict[int, int] = {}
-
-    for b in range(num_buckets):
-        start_val = float(boundaries[b])
-        end_val = float(boundaries[b + 1])
-        in_bucket = [
-            pid for pid, val in all_stats
-            if (b == 0 and val >= start_val or b > 0 and val > start_val)
-            and (b == num_buckets - 1 or val <= end_val)
-        ]
-        count = len(in_bucket)
-        bucket_counts_size[b + 1] = count
-
-        size_buckets.append({
-            "bucket": b + 1,
-            "start": start_val,
-            "end": end_val,
-            "count": count
-        })
-
-        if player_id in in_bucket:
-            player_bucket_size = b + 1
-
-    return {
-        "player_id": player_id,
-        "stat_name": stat_name,
-        "player_bucket_width": player_bucket_width,
-        "player_bucket_size": player_bucket_size,
-        "width_buckets": width_buckets,
-        "size_buckets": size_buckets
-    }
-
-
-@app.get("/player/{player_id}/stat-buckets-cluster/{stat_name}", response_model=dict)
-def get_stat_buckets(
-    player_id: int,
-    stat_name: str,
-    num_buckets: int = 10,
-    db: Session = Depends(get_db),
-):
-    # --- Get the player to find their cluster ---
+    # --- Get player (for cluster filtering) ---
     player = db.query(PlayerStats).filter(PlayerStats.id == player_id).first()
     if not player:
         return {"error": "Player not found"}
 
-    player_cluster = player.cluster  # <-- get the cluster
+    player_cluster = player.cluster
 
-    # --- Filter all stats to only players in that cluster ---
-    stat_col = getattr(PlayerStats, stat_name)
-    all_stats = (
-        db.query(PlayerStats.id, stat_col)
-        .filter(PlayerStats.cluster == player_cluster)
-        .filter(stat_col.isnot(None))
-        .all()
-    )
+    def compute_buckets(filter_query):
+        """Helper function to compute both equal-width and equal-size buckets."""
+        # --- Get min and max of the stat ---
+        min_val, max_val = filter_query.with_entities(
+            func.min(stat_col), func.max(stat_col)
+        ).first()
 
-    if not all_stats:
+        if min_val is None or max_val is None:
+            return {
+                "player_bucket_width": 0,
+                "player_bucket_size": 0,
+                "width_buckets": [],
+                "size_buckets": []
+            }
+
+        # ============================================================
+        # Equal-WIDTH buckets
+        # ============================================================
+        width = (max_val - min_val) / num_buckets_width
+
+        stmt = (
+            select(
+                PlayerStats.id,
+                func.width_bucket(stat_col, min_val, max_val, num_buckets_width).label("bucket")
+            )
+            .select_from(PlayerStats)
+        )
+
+        if player_cluster is not None:
+            stmt = stmt.filter(PlayerStats.cluster == player_cluster)
+
+        all_buckets = db.execute(stmt).all()
+
+        bucket_counts_width: Dict[int, int] = {}
+        player_bucket_width = 0
+        for row in all_buckets:
+            b = row._mapping["bucket"]
+            bucket_counts_width[b] = bucket_counts_width.get(b, 0) + 1
+            if row._mapping["id"] == player_id:
+                player_bucket_width = b
+
+        width_buckets = []
+        for b in range(1, num_buckets_width + 1):
+            start = min_val + (b - 1) * width
+            end = min_val + b * width
+            count = bucket_counts_width.get(b, 0)
+            width_buckets.append({
+                "bucket": b,
+                "start": start,
+                "end": end,
+                "count": count
+            })
+
+        # ============================================================
+        # Equal-SIZE (quantile) buckets
+        # ============================================================
+        all_stats = filter_query.with_entities(PlayerStats.id, stat_col).filter(stat_col.isnot(None)).all()
+        if not all_stats:
+            return {
+                "player_bucket_width": player_bucket_width,
+                "player_bucket_size": 0,
+                "width_buckets": width_buckets,
+                "size_buckets": []
+            }
+
+        ids, values = zip(*all_stats)
+        values = np.array(values, dtype=float)
+        quantiles = np.linspace(0, 1, num_buckets_size + 1)
+        boundaries = np.quantile(values, quantiles)
+
+        size_buckets = []
+        player_bucket_size = 0
+        for b in range(num_buckets_size):
+            start_val = float(boundaries[b])
+            end_val = float(boundaries[b + 1])
+            in_bucket = [
+                pid for pid, val in all_stats
+                if (b == 0 and val >= start_val or b > 0 and val > start_val)
+                and (b == num_buckets_size - 1 or val <= end_val)
+            ]
+            count = len(in_bucket)
+            size_buckets.append({
+                "bucket": b + 1,
+                "start": start_val,
+                "end": end_val,
+                "count": count
+            })
+            if player_id in in_bucket:
+                player_bucket_size = b + 1
+
         return {
-            "player_id": player_id,
-            "stat_name": stat_name,
-            "player_bucket_width": 0,
-            "player_bucket_size": 0,
-            "width_buckets": [],
-            "size_buckets": []
+            "player_bucket_width": player_bucket_width,
+            "player_bucket_size": player_bucket_size,
+            "width_buckets": width_buckets,
+            "size_buckets": size_buckets
         }
 
-    # --- Min and Max for equal-width buckets (only for cluster) ---
-    min_val, max_val = (
-        db.query(func.min(stat_col), func.max(stat_col))
-        .filter(PlayerStats.cluster == player_cluster)
-        .first()
-    )
+    # --- Compute GLOBAL buckets (all players) ---
+    global_result = compute_buckets(db.query(PlayerStats))
 
-    width = (max_val - min_val) / num_buckets
+    # --- Compute CLUSTER buckets (players in same cluster) ---
+    cluster_query = db.query(PlayerStats).filter(PlayerStats.cluster == player_cluster)
+    cluster_result = compute_buckets(cluster_query)
 
-    # --- Equal-width buckets ---
-    stmt = select(
-        PlayerStats.id,
-        func.width_bucket(stat_col, min_val, max_val, num_buckets).label("bucket")
-    ).filter(PlayerStats.cluster == player_cluster)
-
-    all_buckets = db.execute(stmt).all()
-
-    bucket_counts_width: Dict[int, int] = {}
-    player_bucket_width = 0
-    for row in all_buckets:
-        b = row._mapping["bucket"]
-        bucket_counts_width[b] = bucket_counts_width.get(b, 0) + 1
-        if row._mapping["id"] == player_id:
-            player_bucket_width = b
-
-    width_buckets = []
-    for b in range(1, num_buckets + 1):
-        start = min_val + (b - 1) * width
-        end = min_val + b * width
-        count = bucket_counts_width.get(b, 0)
-        width_buckets.append({
-            "bucket": b,
-            "start": start,
-            "end": end,
-            "count": count
-        })
-
-    # --- Equal-size (quantile) buckets ---
-    ids, values = zip(*all_stats)
-    values = np.array(values, dtype=float)
-    quantiles = np.linspace(0, 1, num_buckets + 1)
-    boundaries = np.quantile(values, quantiles)
-
-    size_buckets = []
-    player_bucket_size = 0
-    for b in range(num_buckets):
-        start_val = float(boundaries[b])
-        end_val = float(boundaries[b + 1])
-        in_bucket = [
-            pid for pid, val in all_stats
-            if (b == 0 and val >= start_val or b > 0 and val > start_val)
-            and (b == num_buckets - 1 or val <= end_val)
-        ]
-        count = len(in_bucket)
-        size_buckets.append({
-            "bucket": b + 1,
-            "start": start_val,
-            "end": end_val,
-            "count": count
-        })
-        if player_id in in_bucket:
-            player_bucket_size = b + 1
-
+    # --- Combine both results ---
     return {
         "player_id": player_id,
         "stat_name": stat_name,
-        "player_bucket_width": player_bucket_width,
-        "player_bucket_size": player_bucket_size,
-        "width_buckets": width_buckets,
-        "size_buckets": size_buckets
+        "global": global_result,
+        "cluster": cluster_result
     }
+
+
+@app.get("/random_goal_possession", response_model=PossessionsResponseWithEvents)
+def get_random_goal_possession(db: Session = Depends(get_db)):
+    goal_events = (
+        db.query(Events)
+        .join(EventOutcomes, Events.outcome_id == EventOutcomes.id)
+        .filter(EventOutcomes.name == "Goal")
+        .all()
+    )
+    if not goal_events:
+        raise HTTPException(status_code=404, detail="No goal events found")
+
+    random_goal_event = random.choice(goal_events)
+    return fetch_possession_with_events(random_goal_event.match_id,random_goal_event.possession,db)

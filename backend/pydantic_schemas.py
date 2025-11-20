@@ -1,5 +1,5 @@
 from datetime import date, time
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 from uuid import UUID
 from pydantic import BaseModel
 
@@ -132,9 +132,9 @@ class PossessionsResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class PossessionsResponseWithEvents(PossessionsResponse):
     events: list[EventResponse]
+    summary_stats: Optional[Dict[str, Any]] = None
 
 
 class BucketInfo(BaseModel):

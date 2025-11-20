@@ -73,4 +73,8 @@ export class MatchService {
     }
     return this.http.get(`${this.apiUrl}/match/possession`, { params });
   }
+
+  public getRandomGoal(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/random_goal_possession`);
+  }
 }

@@ -1,7 +1,6 @@
-<h2 id="player-stats-title" style="font-size: 2rem; font-weight: 400; margin-bottom: 32px; color: #333;">
-    Player Statistics</h2><!-- Search Bar -->
-<div class="player-row">
-    <mat-form-field appearance="outline" class="player-select">
+<mat-card
+    style="background-color: #ddffdd; margin: 8px; padding: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; align-content: center;">
+    <mat-form-field style="margin: 8px;" appearance="outline" class="player-select">
         <mat-label>Select Player</mat-label>
         <mat-select [value]="selectedPlayer?.id || 0" (valueChange)="playerSelected($event)">
             @for (player of players; track player) {
@@ -16,27 +15,32 @@
         <div>Position: {{ selectedPlayer.cluster }}</div>
     </div>
     }
-</div>
+</mat-card>
 @if (selectedPlayer && selectedPlayer !== {}) {
 <mat-tab-group [(selectedIndex)]="selectedTabIndex">
     <mat-tab label=" Individual Stats">
         <div class="player-stats-container">
-
             <!-- Player Stats Card -->
             <mat-card class="player-card" appearance="outlined">
                 <mat-card-header>
                     <mat-card-title>Player Stats</mat-card-title>
                 </mat-card-header>
-
-
                 <mat-card-content>
+                    <mat-form-field appearance="outline" class="attribute-select">
+                        <mat-label>Select Attribute</mat-label>
+                        <mat-select (valueChange)="selectAttributeChart($event)">
+                            @for (attribute of attr_list; track attribute) {
+                            <mat-option [value]="attribute[0]">{{ attribute[1] }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
                     <div class="stat-list">
                         @for (attribute of attr_list; track attribute) {
                         <div class="stat-item">
                             <span class="stat-label">{{ attribute[1] | titlecase }}</span>
                             <span class="stat-value">
                                 {{
-                                attribute.includes('percent')
+                                attribute[0].includes('percent')
                                 ? (selectedPlayer[attribute[0]] | percent:'1.0-2')
                                 : (selectedPlayer[attribute[0]] | number:'1.0-2')
                                 }}
@@ -46,44 +50,66 @@
                     </div>
                 </mat-card-content>
             </mat-card>
+            <div class="charts-container">
+                <!-- Charts & Visualizations -->
+                <div class="charts-section">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Played positions</mat-card-title>
+                        </mat-card-header>
 
-            <!-- Charts & Visualizations -->
-            <div class="charts-section">
-                <mat-card class="chart-card">
-                    <div class="chart-container">
-                        <canvas id="myChart"></canvas>
-                    </div>
-                </mat-card>
+                        <div class="chart-container">
+                            <canvas id="myChart"></canvas>
+                        </div>
+                    </mat-card>
+                </div>
+                <div class="charts-section">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Attribute percentile all round</mat-card-title>
+                        </mat-card-header>
+                        <div class="chart-container" style="min-height: 300px;">
+                            <canvas id="global-equal-width"></canvas>
+                        </div>
+                    </mat-card>
+                </div>
+                <div class="charts-section">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Attribute distribution all round</mat-card-title>
+                        </mat-card-header>
+                        <div class="chart-container" style="min-height: 300px;">
+                            <canvas id="global-equal-size"></canvas>
+                        </div>
+                    </mat-card>
+                </div>
+                <div class="charts-section">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Attribute percentile in position</mat-card-title>
+                        </mat-card-header>
+                        <div class="chart-container" style="min-height: 300px;">
+                            <canvas id="cluster-equal-width"></canvas>
+                        </div>
+                    </mat-card>
+                </div>
+                <div class="charts-section">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Attribute distribution all round</mat-card-title>
+                        </mat-card-header>
+                        <div class="chart-container" style="min-height: 300px;">
+                            <canvas id="cluster-equal-size"></canvas>
+                        </div>
+                    </mat-card>
+                </div>
             </div>
-            <div class="charts-section">
-                <mat-card class="chart-card">
-                    <mat-form-field appearance="outline" class="attribute-select">
-                        <mat-label>Select Attribute</mat-label>
-                        <mat-select (valueChange)="selectAttributeChart($event)">
-                            @for (attribute of attr_list; track attribute) {
-                            <mat-option [value]="attribute[0]">{{ attribute[1] }}</mat-option>
-                            }
-                        </mat-select>
-                    </mat-form-field>
-                    <div class="chart-container" style="min-height: 500px;">
-                        <canvas id="buckets"></canvas>
-                    </div>
-                </mat-card>
-            </div>
-            <div class="charts-section">
-                <mat-card class="chart-card">
-                    <div class="chart-container" style="min-height: 500px;">
-                        <canvas id="equal-size-buckets"></canvas>
-                    </div>
-                </mat-card>
-            </div>
-
 
 
         </div>
     </mat-tab>
     <mat-tab label="Event distribution">
-        <mat-card style="margin-left: 25%; margin-right: 25%; margin-top: 10px; max-width: 702px;">
+        <mat-card [appearance]="'raised'" style="margin-left: 25%; margin-right: 25%; margin-top: 10px">
             <mat-card-content>
                 <mat-chip-listbox multiple="true" class="event-chip-list">
                     @for (eventType of eventTypes; track eventType) {
@@ -94,8 +120,9 @@
                     }
                 </mat-chip-listbox>
 
-                <app-football-pitch [player_events]="playerEvents" [home_team]="''" class="pitch-display">
-                </app-football-pitch>
+                <app-football-pitch-resizable [scale]="1.8" [player_events]="playerEvents" [home_team]="''"
+                    class="pitch-display">
+                </app-football-pitch-resizable>
             </mat-card-content>
         </mat-card>
     </mat-tab>
@@ -155,7 +182,7 @@
                             <span class="stat-label">{{ attribute[1] | titlecase }}</span>
                             <span class="stat-value">
                                 {{
-                                attribute.includes('percent')
+                                attribute[0].includes('percent')
                                 ? (selectedPlayer[attribute[0]] | percent:'1.0-2')
                                 : (selectedPlayer[attribute[0]] | number:'1.0-2')
                                 }}

@@ -12,6 +12,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { FootballPitchResizableComponent } from '../football-pitch-resizable/football-pitch-resizable.component';
+import { PossessionSummaryComponent } from './possession-summary/possession-summary.component';
 
 @Component({
   selector: 'app-match-stats',
@@ -19,7 +21,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     CommonModule,
     MatFormFieldModule,
     MatSelectModule,
-    FootballPitchComponent,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
@@ -27,6 +28,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     FormsModule,
     MatTableModule,
     MatToolbarModule,
+    FootballPitchResizableComponent,
+    PossessionSummaryComponent,
   ],
   templateUrl: './match-stats.component.html',
   styleUrl: './match-stats.component.scss',
@@ -138,5 +141,26 @@ export class MatchStatsComponent {
 
   stop() {
     this.playing = false;
+  }
+
+  getEventCountsLabels(counts: any) {
+    return Object.keys(counts);
+  }
+  getEventCountsData(counts: any) {
+    return Object.values(counts);
+  }
+
+  getPlayerInvolvementLabels(involvements: any) {
+    return Object.keys(involvements);
+  }
+  getPlayerInvolvementData(involvements: any) {
+    return Object.values(involvements);
+  }
+
+  getPlayerDistanceLabels(distance: any) {
+    return Object.keys(distance);
+  }
+  getPlayerDistanceData(distance: any) {
+    return Object.values(distance);
   }
 }

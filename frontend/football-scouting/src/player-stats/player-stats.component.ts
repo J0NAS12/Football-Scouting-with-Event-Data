@@ -7,12 +7,13 @@ import { Chart, ChartItem, registerables } from 'chart.js';
 import { FootballPitchComponent } from '../football-pitch/football-pitch.component';
 import { CommonModule } from '@angular/common';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
-import { MatRecycleRows, MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { FootballPitchResizableComponent } from '../football-pitch-resizable/football-pitch-resizable.component';
 Chart.register(...registerables, annotationPlugin);
 
 @Component({
@@ -21,7 +22,6 @@ Chart.register(...registerables, annotationPlugin);
     MatOption,
     MatSelect,
     MatFormFieldModule,
-    FootballPitchComponent,
     CommonModule,
     MatChipsModule,
     MatTabsModule,
@@ -29,6 +29,7 @@ Chart.register(...registerables, annotationPlugin);
     MatButtonModule,
     MatCardModule,
     MatDividerModule,
+    FootballPitchResizableComponent,
   ],
   templateUrl: './player-stats.component.html',
   styleUrl: './player-stats.component.scss',
@@ -46,8 +47,7 @@ export class PlayerStatsComponent implements OnInit {
 
   positionsChart?: Chart;
   Object: any;
-  equalWidthBucketsChart?: Chart;
-  equalSizeBucketsChart?: Chart;
+  charts: any = {};
 
   constructor(private playerService: PlayerService) {}
   displayedColumns: string[] = [
@@ -60,7 +60,7 @@ export class PlayerStatsComponent implements OnInit {
 
   ngOnInit(): void {
     this.selectedPlayer = null;
-
+    this.charts = {};
     this.playerService.getPlayerList().subscribe((x) => {
       this.players = x;
     });
@@ -76,7 +76,7 @@ export class PlayerStatsComponent implements OnInit {
         .subscribe((x) => {
           this.similarPlayers = x;
         });
-      setTimeout(() => this.setUpCharts(), 0);
+      setTimeout(() => this.setUpCharts(), 200);
     });
     this.playerService.getPlayerEvents(player, []).subscribe((x) => {
       this.playerEvents = x;
@@ -108,51 +108,50 @@ export class PlayerStatsComponent implements OnInit {
   }
 
   setUpCharts() {
-    setTimeout(() => {
-      const ctx = document.getElementById('myChart') as ChartItem;
-      if (this.positionsChart) {
-        this.positionsChart.destroy();
-      }
-      if (!ctx) {
-        console.error('Failed to get 2D context');
-        return;
-      }
-      this.positionsChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: [
-            'Goalkeeper',
-            'Center Back',
-            'Wide Back',
-            'Center Midfielder',
-            'Wide Midfielder',
-            'Striker',
-          ],
-          datasets: [
-            {
-              label: 'Positions',
-              data: [
-                this.selectedPlayer.goalkeeper * 100,
-                this.selectedPlayer.center_back * 100,
-                this.selectedPlayer.wide_back * 100,
-                this.selectedPlayer.centermidfielder * 100,
-                this.selectedPlayer.wide_midfielder * 100,
-                this.selectedPlayer.striker * 100,
-              ],
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-            },
+    const ctx = document.getElementById('myChart') as ChartItem;
+    if (this.positionsChart) {
+      this.positionsChart.destroy();
+    }
+    if (!ctx) {
+      console.error('Failed to get 2D context');
+      return;
+    }
+    this.positionsChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: [
+          'Goalkeeper',
+          'Center Back',
+          'Wide Back',
+          'Center Midfielder',
+          'Wide Midfielder',
+          'Striker',
+        ],
+        datasets: [
+          {
+            label: 'Positions',
+            data: [
+              this.selectedPlayer.goalkeeper * 100,
+              this.selectedPlayer.center_back * 100,
+              this.selectedPlayer.wide_back * 100,
+              this.selectedPlayer.centermidfielder * 100,
+              this.selectedPlayer.wide_midfielder * 100,
+              this.selectedPlayer.striker * 100,
+            ],
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
           },
         },
-      });
+      },
     });
+    this.selectAttributeChart('pass_90');
   }
 
   playerAttributeKeys() {
@@ -163,48 +162,28 @@ export class PlayerStatsComponent implements OnInit {
     this.playerService
       .getAttributeBucket(this.selectedPlayer.id, event)
       .subscribe((bucketData) => {
-        const ctx = document.getElementById('buckets') as ChartItem;
-        if (this.equalWidthBucketsChart) {
-          this.equalWidthBucketsChart.destroy();
-        }
-        // Extract labels and counts from bucketData
-        const labels = bucketData.width_buckets.map(
-          (b: any) => ` ${b.bucket * 10} %`
+        const statName = bucketData.stat_name ?? 'Stat';
+        console.log(this.charts);
+        this.showEqualWidthBuckets(
+          bucketData.global,
+          statName,
+          'global-equal-width'
         );
-        const counts = bucketData.width_buckets.map((b: any) => b.count);
-
-        // Highlight the player's bucket
-        const backgroundColors = bucketData.width_buckets.map((b: any) =>
-          b.bucket === bucketData.player_bucket_width
-            ? 'rgba(63,81,181,0.8)'
-            : 'rgba(200,200,200,0.5)'
+        this.showEqualSizeBuckets(
+          bucketData.global,
+          statName,
+          'global-equal-size'
         );
-
-        this.equalWidthBucketsChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: this.playerName(this.selectedPlayer.id),
-                data: counts,
-                backgroundColor: backgroundColors,
-                borderColor: 'rgba(63,81,181,1)',
-                borderWidth: 1,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-              },
-            },
-          },
-        });
-        this.showEqualSizeBuckets(bucketData);
+        this.showEqualWidthBuckets(
+          bucketData.cluster,
+          statName,
+          'cluster-equal-width'
+        );
+        this.showEqualSizeBuckets(
+          bucketData.cluster,
+          statName,
+          'cluster-equal-size'
+        );
       });
   }
 
@@ -236,13 +215,55 @@ export class PlayerStatsComponent implements OnInit {
     return this.players.find((x) => x.id == id).name;
   }
 
-  showEqualSizeBuckets(data: any) {
+  showEqualWidthBuckets(bucketData: any, statName: any, element: string) {
+    const ctx = document.getElementById(element) as ChartItem;
+    if (this.charts[element]) {
+      this.charts[element].destroy();
+    }
+    // Extract labels and counts from bucketData
+    const labels = bucketData.width_buckets.map(
+      (b: any) => ` ${b.bucket * 10} %`
+    );
+    const counts = bucketData.width_buckets.map((b: any) => b.count);
+
+    // Highlight the player's bucket
+    const backgroundColors = bucketData.width_buckets.map((b: any) =>
+      b.bucket === bucketData.player_bucket_width
+        ? 'rgba(63,81,181,0.8)'
+        : 'rgba(200,200,200,0.5)'
+    );
+
+    this.charts[element] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: this.playerName(this.selectedPlayer.id),
+            data: counts,
+            backgroundColor: backgroundColors,
+            borderColor: 'rgba(63,81,181,1)',
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  showEqualSizeBuckets(data: any, statName: any, element: string) {
     // Get 2D drawing context safely
-    const canvas = document.getElementById(
-      'equal-size-buckets'
-    ) as HTMLCanvasElement;
+    const canvas = document.getElementById(element) as HTMLCanvasElement;
     if (!canvas) {
-      console.warn('Canvas not found for equal-size-buckets');
+      console.warn(`Canvas not found for ${element}`);
       return;
     }
 
@@ -253,17 +274,17 @@ export class PlayerStatsComponent implements OnInit {
     }
 
     // Destroy any existing chart
-    if (this.equalSizeBucketsChart) {
-      this.equalSizeBucketsChart.destroy();
+    if (this.charts[element]) {
+      this.charts[element].destroy();
     }
 
     const buckets = data.size_buckets ?? [];
     const playerBucket = data.player_bucket;
-    const statName = data.stat_name ?? 'Stat';
 
     if (!buckets.length) return;
 
     // Compute density
+
     const xValues = buckets.map((b: any) => (b.start + b.end) / 2);
     let yValues = buckets.map((b: any) => {
       const width = b.end - b.start;
@@ -278,13 +299,12 @@ export class PlayerStatsComponent implements OnInit {
     // Step 3: replace any Infinity or NaN with finiteMax
     yValues = yValues.map((v: any) => (Number.isFinite(v) ? v : finiteMax));
 
-    const playerBucketObj = buckets.find((b: any) => b.bucket === playerBucket);
     const playerX = this.selectedPlayer[statName];
     console.log(playerX);
 
     console.log(`${playerX}, ${Math.max(...yValues)}`);
     // Create the chart
-    this.equalSizeBucketsChart = new Chart(ctx, {
+    this.charts[element] = new Chart(ctx, {
       type: 'line',
       data: {
         datasets: [
@@ -333,10 +353,12 @@ export class PlayerStatsComponent implements OnInit {
     });
   }
 
-  attr_list = [
+  attr_list: any = [
     ['pass_90', 'Passes/90'],
+    ['assists_90', 'Assists/90'],
     ['shot_90', 'Shots/90'],
     ['xg_90', 'Expected goals/90'],
+    ['goals_90', 'Goals/90'],
     ['dribble_90', 'Dribbles/90'],
     ['carry_90', 'Carries/90'],
     ['block_90', 'Blocks/90'],
@@ -344,9 +366,13 @@ export class PlayerStatsComponent implements OnInit {
     ['interception_90', 'Interception/90'],
     ['clearance_90', 'Clearence/90'],
     ['pressure_90', 'Pressures/90'],
-    ['header_percent', 'Headers % of all shots'],
     ['foul_won_90', 'Fouls won/90'],
     ['foul_commited_90', 'Fouls committed/90'],
+    ['pass_success_rate_percent', 'Pass success rate'],
+    ['header_percent', 'Headers'],
+    ['extra_shots_percent', 'Acrobatic shots'],
+    ['first_time_shots_percent', 'First time shots'],
+    ['shots_on_target_percent', 'Shots on target'],
     ['ground_pass_percent', 'Ground passes'],
     ['low_pass_percent', 'Low passes'],
     ['high_pass_percent', 'High passes'],

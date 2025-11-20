@@ -1,37 +1,36 @@
-<main class="main-content"><!-- Home Section -->
-    <section id="home-section" class="section-content active">
-        <div class="welcome-section">
-            <h1 class="welcome-title">Welcome to Sports Analytics</h1>
-            <p class="welcome-subtitle">Dive deep into player and team statistics with our comprehensive analytics
-                platform. Compare players, analyze performance trends, and discover insights with Material Design.
-            </p>
+<div class="welcome-section">
+    <h1 class="welcome-title">Welcome to Football Scouting!</h1>
+</div>
+<div class="feature-cards">
+    <div class="mat-card-content" style="text-align: center; padding: 32px;">
+        <div class="feature-icon green">
         </div>
-        <div class="feature-cards">
-            <div class="mat-card feature-card">
-                <div class="mat-card-content" style="text-align: center; padding: 32px;">
-                    <div class="feature-icon blue"><span class="material-icons">person</span>
-                    </div>
-                    <h3 style="margin: 0 0 16px 0; font-weight: 500;">Player Analytics</h3>
-                    <p style="color: #666; margin: 0; line-height: 1.6;">Search and analyze individual player
-                        performance with detailed statistics and comparisons.</p>
-                </div>
+        <h3 style="margin: 0 0 16px 0; font-weight: 500; font-size: 18px;">
+            <a mat-button [routerLink]="['player']" style="font-weight: 500; font-size: 18px;">
+                Go to Player Statistics
+                <span class=" material-icons" style="padding-right: 5px;">arrow_forward</span>
+            </a>
+        </h3>
+        <p style="color: #666; margin: 0; line-height: 1.6;">Analyze and compare similar players based on
+            visualizations and detailed event data.</p>
+    </div>
+    <div class="mat-card feature-card">
+        <div class="mat-card-content" style="text-align: center; padding: 32px;">
+            <div class="feature-icon green">
             </div>
-            <div class="mat-card feature-card">
-                <div class="mat-card-content" style="text-align: center; padding: 32px;">
-                    <div class="feature-icon green"><span class="material-icons">groups</span>
-                    </div>
-                    <h3 style="margin: 0 0 16px 0; font-weight: 500;">Team Statistics</h3>
-                    <p style="color: #666; margin: 0; line-height: 1.6;">Comprehensive team performance metrics and
-                        historical data analysis.</p>
-                </div>
-            </div>
-            <div class="mat-card feature-card">
-                <div class="mat-card-content" style="text-align: center; padding: 32px;">
-                    <div class="feature-icon purple"><span class="material-icons">bar_chart</span>
-                    </div>
-                    <h3 style="margin: 0 0 16px 0; font-weight: 500;">Data Visualization</h3>
-                    <p style="color: #666; margin: 0; line-height: 1.6;">Interactive charts and graphs to visualize
-                        performance trends and patterns.</p>
-                </div>
-            </div>
+            <h3 style="margin: 0 0 16px 0; font-weight: 500; font-size: 18px;">
+                <a mat-button appearance="outline" [routerLink]="['match']" style="font-weight: 500; font-size: 18px;">
+                    Go to Match Statistics
+                    <span class="material-icons" style="padding-right: 5px;">arrow_forward</span>
+                </a>
+            </h3>
+            <p style="color: #666; margin: 0; line-height: 1.6;">Team play style analysis based on possessions.</p>
         </div>
+
+        <div class="mat-card-content" style="display: flex; justify-content: center; padding: 32px;">
+            <app-football-pitch-resizable [scale]="1.6" [possession]="random_goal"
+                [home_team]="home_team"></app-football-pitch-resizable>
+        </div>
+    </div>
+
+</div>

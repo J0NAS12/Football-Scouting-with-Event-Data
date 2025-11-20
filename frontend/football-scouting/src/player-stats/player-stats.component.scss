@@ -11,6 +11,14 @@ canvas {
   padding: 20px;
   flex-wrap: wrap;
 }
+.charts-container {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 20px;
+  max-width: calc(100vw - 300px);
+}
 
 .player-card {
   width: 350px;
@@ -27,7 +35,7 @@ canvas {
 .stat-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
   padding-top: 10px;
 }
 
@@ -61,11 +69,10 @@ canvas {
 .chart-card,
 .pitch-card {
   flex: 1;
-  min-width: 320px;
+  min-width: 400px;
   max-width: 600px;
   border-radius: 12px;
   padding: 16px;
-  height: 600px;
 }
 
 .chart-container {
@@ -128,7 +135,7 @@ canvas {
   background: var(--mat-sys-surface-container-highest, #fafafa);
   border-radius: 6px;
   padding: 6px 12px;
-  font-size: 14px;
+  font-size: 20px;
 }
 
 .stat-label {
@@ -163,6 +170,8 @@ canvas {
 
 .attribute-name {
   font-weight: 500;
+  font-size: 20px;
+  text-align: center;
   color: var(--mat-sys-on-surface-variant, #555);
 }
 
@@ -212,10 +221,10 @@ canvas {
 .player-info {
   display: flex;
   align-items: center;
-  gap: 15px;
-  font-size: 16px;
+  gap: 40px;
+  font-size: 20px;
   color: #333;
-  background: #f5f5f5;
+  background: #aaffaa;
   border-radius: 8px;
   padding: 8px 16px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
