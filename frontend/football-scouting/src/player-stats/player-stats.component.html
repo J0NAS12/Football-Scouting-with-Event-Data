@@ -18,7 +18,7 @@
 </mat-card>
 @if (selectedPlayer && selectedPlayer !== {}) {
 <mat-tab-group [(selectedIndex)]="selectedTabIndex">
-    <mat-tab label=" Individual Stats">
+    <mat-tab label="Individual Stats">
         <div class="player-stats-container">
             <!-- Player Stats Card -->
             <mat-card class="player-card" appearance="outlined">
@@ -96,7 +96,7 @@
                 <div class="charts-section">
                     <mat-card class="chart-card">
                         <mat-card-header>
-                            <mat-card-title>Attribute distribution all round</mat-card-title>
+                            <mat-card-title>Attribute distribution in position</mat-card-title>
                         </mat-card-header>
                         <div class="chart-container" style="min-height: 300px;">
                             <canvas id="cluster-equal-size"></canvas>

@@ -177,9 +177,7 @@ def match_summary_by_player(
         .join(Possessions, and_(
             Events.match_id == Possessions.match_id,
             Events.possession == Possessions.possession
-        ))
-
-        .filter(Events.match_id == match_id)
+        )).filter(Events.match_id == match_id)
     )
 
     '''func.sum(Shots.statsbomb_xg).label('expected_goals'),
@@ -448,8 +446,6 @@ def event_summary_by_player(db: Session = Depends(get_db)):
             })
     return event_counts_list
 
-
-
 @app.get("/player_possible_actions/{player_id}", response_model=list)
 def player_possible_actions(player_id: int, db: Session = Depends(get_db)):
     filter_possible_actions = and_(
@@ -508,9 +504,7 @@ def statistics_of_selected_player(id: int, db: Session = Depends(get_db)):
 
 @app.get("/player/events", response_model=list[EventResponse])
 def list_events_of_a_match(player_id: int, type_id: list[int] = Query(default=[]),db: Session = Depends(get_db)):
-    print(f"Type{type_id}")
     filters = [Events.player_id == player_id]
-    print(f"Type{type_id}")
     if type_id:  
         filters.append(Events.type_id.in_(type_id))
 

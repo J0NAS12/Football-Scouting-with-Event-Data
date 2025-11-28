@@ -42,32 +42,62 @@
 
         </mat-tab>-->
     <mat-tab label="Event-by-event analysis">
-        <div style="display: flex; justify-content:center; flex-direction: row;">
-            <button mat-icon-button [disabled]="event_index==0"
-                (click)="eventChanged(-1)"><mat-icon>navigate_before</mat-icon></button>
-            <div style="width: 250px;">
-                <div [ngClass]="!!event ? '': 'hidden'">{{event?.player_name}}: {{event?.event_name}}</div>
-                <div [ngClass]="!!event ? '': 'hidden'">{{event?.period}}. Half: {{event?.timestamp.slice(3, 8)}}
+        <div style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    gap: 16px;
+    font-size: 18px;
+">
+            <!-- Previous button -->
+            <button mat-icon-button [disabled]="event_index == 0" (click)="eventChanged(-1)" style="font-size: 18px;">
+                <mat-icon style="font-size: 28px;">navigate_before</mat-icon>
+            </button>
+
+            <!-- Event card -->
+            <div class="event-box" *ngIf="event as e" style="
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            min-width: 260px;
+            font-size: 18px;
+            line-height: 1.3;
+        ">
+                <div class="event-title" style="font-weight: 600; margin-bottom: 6px; font-size: 18px;">
+                    {{ e.player_name }}: {{ e.event_name }}
+                </div>
+
+                <div class="event-meta" style="color: #555; font-size: 18px;">
+                    {{ e.period }}. Half — {{ e.timestamp.slice(3, 8) }}
                 </div>
             </div>
-            <button mat-icon-button (click)="eventChanged(1)"><mat-icon>navigate_next</mat-icon></button>
-            <!--<button mat-icon-button (click)="start()"><mat-icon>play_arrow</mat-icon></button>
-            <button mat-icon-button (click)="stop()"><mat-icon>pause</mat-icon></button>-->
+
+            <!-- Next button -->
+            <button mat-icon-button (click)="eventChanged(1)" style="font-size: 18px;">
+                <mat-icon style="font-size: 28px;">navigate_next</mat-icon>
+            </button>
         </div>
+
         <div style="display: flex; justify-content:center; flex-direction: row;">
             <app-football-pitch-resizable [scale]="1.8" style="padding: 10px;" [event]="event"
                 [home_team]="currentMatch.home_team_name"></app-football-pitch-resizable>
         </div>
     </mat-tab>
     <mat-tab label="Player Stats">
-        <mat-form-field appearance="fill">
-            <mat-label>Playing Style</mat-label>
-            <mat-select [(ngModel)]="selectedStyle">
-                <mat-option *ngFor="let style of set(playingStyles)" [value]="style">
-                    Style {{ style }}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
+        <div
+            style="display: flex; flex-direction: row; justify-content: center; justify-items: center; align-items: center;">
+            <mat-form-field style="width: 400px;" appearance="fill">
+                <mat-label>Playing Style</mat-label>
+                <mat-select [(ngModel)]="selectedStyle" (selectionChange)="playingStyleSelected($event)">
+                    <mat-option [value]="">Any</mat-option>
+                    <mat-option *ngFor="let style of set(playingStyles)" [value]="style">
+                        {{ style }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <!--
         <mat-form-field appearance="fill">
             <mat-label>Players</mat-label>
             <mat-select [(ngModel)]="selectedPlayers" multiple>
@@ -76,10 +106,12 @@
                 </mat-option>
             </mat-select>
         </mat-form-field>
-        <mat-table style="background-color: lightgreen;" [dataSource]="stats" class="mat-elevation-z8">
+        -->
+        <mat-table style="background-color: #bbffbb;overflow-x: auto;" [dataSource]="stats" class="mat-elevation-z8">
             <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
-                <mat-header-cell *matHeaderCellDef> {{ column }} </mat-header-cell>
-                <mat-cell *matCellDef="let element"> {{ element[column] }} </mat-cell>
+                <mat-header-cell *matHeaderCellDef style="min-width: 200px;"> {{ fieldDisplayMap[column] || column }}
+                </mat-header-cell>
+                <mat-cell *matCellDef="let element" style="min-width: 200px;"> {{ element[column] }} </mat-cell>
             </ng-container>
 
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
@@ -101,10 +133,14 @@
             </mat-select>
         </mat-form-field>
 
+
         <div style="display: flex; width:100%;">
-            <app-football-pitch-resizable style="padding: 10px; margin-top: 20px;" [possession]="possession.events"
-                [home_team]="possession.possession_team_name" [scale]="1.5">
-            </app-football-pitch-resizable>
+            <div style="padding: 10px; margin-top: 20px;">
+                <div>Possession type: {{possession.playing_style}}</div>
+                <app-football-pitch-resizable [possession]="possession.events"
+                    [home_team]="possession.possession_team_name" [scale]="1.5">
+                </app-football-pitch-resizable>
+            </div>
             <app-possession-summary style="display: flex; width:100%;"
                 [possession]="possession"></app-possession-summary>
         </div>

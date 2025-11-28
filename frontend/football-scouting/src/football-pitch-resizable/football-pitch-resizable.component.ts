@@ -59,13 +59,12 @@ export class FootballPitchResizableComponent {
         } else {
           team = this.home_team;
         }
-
         this.assignPos(
           el,
           player.x,
           player.y,
           team,
-          player.team_name != this.home_team
+          this.event?.team_name != this.home_team
         );
       });
 

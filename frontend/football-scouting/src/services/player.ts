@@ -25,10 +25,16 @@ export class PlayerService {
     return this.http.get(`${this.apiUrl}/player`, { params });
   }
 
-  public getPlayerStats(match_id = undefined): Observable<any> {
+  public getPlayerStats(
+    match_id = undefined,
+    playing_style = undefined
+  ): Observable<any> {
     let params = new HttpParams();
     if (match_id !== undefined) {
       params = params.set('match_id', match_id);
+    }
+    if (playing_style !== undefined) {
+      params = params.set('playing_style', playing_style);
     }
     return this.http.get(`${this.apiUrl}/match/playerstats`, { params });
   }

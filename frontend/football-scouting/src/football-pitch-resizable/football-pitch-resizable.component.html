@@ -14,20 +14,22 @@
         @if (event) {
         @for (player of (event ? event.player_positions : []); track player) {
         <div class="player-position" [id]="'ppos-'+$index"
-            [style.left.px]="scaleX(player.x, player.home_team_name == this.home_team)"
-            [style.top.px]="scaleY(player.y, player.home_team_name == this.home_team)" [style.width.px]="10 * scale"
+            [style.left.px]="scaleX(player.x,  event.team_name == this.home_team)"
+            [style.top.px]="scaleY(player.y,  event.team_name == this.home_team)" [style.width.px]="10 * scale"
             [style.height.px]="10 * scale" [matTooltip]="player.player_name || ''">
         </div>
         }
-        <div class="player-position-with-ball" [style.left.px]="scaleX(event.x, event.team_name == this.home_team)"
+        <div class="player-position-with-ball" [id]="event.player_id"
+            [style.left.px]="scaleX(event.x, event.team_name == this.home_team)"
             [style.top.px]="scaleY(event.y, event.team_name == this.home_team)" [style.width.px]="10 * scale"
             [style.height.px]="10 * scale" [matTooltip]="event.player_name || ''">
         </div>
-        <div class="ball-position-end" [style.left.px]="scaleX(event.end_x, event.team_name == this.home_team)"
+        <div class="ball-position-end" [id]="'end'"
+            [style.left.px]="scaleX(event.end_x, event.team_name == this.home_team)"
             [style.top.px]="scaleY(event.end_y, event.team_name == this.home_team)" [style.width.px]="6 * scale"
             [style.height.px]="6 * scale" [matTooltip]="event.player_name || ''">
         </div>
-        <div class="ball-position" [style.left.px]="scaleX(event.x, event.team_name == this.home_team)"
+        <div class="ball-position" [id]="'ball'" [style.left.px]="scaleX(event.x, event.team_name == this.home_team)"
             [style.top.px]="scaleY(event.y, event.team_name == this.home_team)" [style.width.px]="6 * scale"
             [style.height.px]="6 * scale">
         </div>

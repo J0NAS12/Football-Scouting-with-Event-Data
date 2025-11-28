@@ -8,11 +8,13 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { Chart, ChartConfiguration } from 'chart.js';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-possession-summary',
   templateUrl: './possession-summary.component.html',
   styleUrls: ['./possession-summary.component.scss'],
+  imports: [MatCardModule],
 })
 export class PossessionSummaryComponent implements AfterViewInit, OnChanges {
   @Input() possession: any; // the DTO from the backend

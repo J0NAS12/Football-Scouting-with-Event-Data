@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { MatchService } from '../services/match';
 import { PlayerService } from '../services/player';
-import { FootballPitchComponent } from '../football-pitch/football-pitch.component';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -66,6 +65,17 @@ export class MatchStatsComponent {
     });
   }
 
+  playingStyleSelected($event: any) {
+    this.playerService
+      .getPlayerStats(this.currentMatch.id, $event.value)
+      .subscribe((x) => {
+        this.stats = x;
+        this.displayedColumns = Object.keys(this.stats[0]).filter(
+          (k) => !k.endsWith('_id') && k != 'playing_style'
+        );
+      });
+  }
+
   set(l: any): any {
     return new Set(l);
   }
@@ -96,6 +106,9 @@ export class MatchStatsComponent {
     });
     this.matchService.getPossessions(match).subscribe((x) => {
       this.possessions = x;
+      this.playingStyles = [
+        ...new Set(this.possessions.map((item) => item.playing_style)),
+      ];
     });
     this.matchService.getPossession(this.currentMatch.id, 3).subscribe((x) => {
       this.possession = x;
@@ -163,4 +176,29 @@ export class MatchStatsComponent {
   getPlayerDistanceData(distance: any) {
     return Object.values(distance);
   }
+
+  fieldDisplayMap: any = {
+    team_name: 'Team Name',
+    player_name: 'Player Name',
+    playing_style: 'Playing Style',
+    total_passes: 'Total Passes',
+    successful_passes: 'Successful Passes',
+    pass_accuracy_percent: 'Pass Accuracy (%)',
+    total_shots: 'Total Shots',
+    total_goals: 'Total Goals',
+    corners: 'Corners',
+    total_dribbles: 'Total Dribbles',
+    successful_dribbles: 'Successful Dribbles',
+    dribble_success_percent: 'Dribble Success (%)',
+    duels_total: 'Duels Total',
+    duels_won: 'Duels Won',
+    duel_success_percent: 'Duel Success (%)',
+    tackles: 'Tackles',
+    interceptions: 'Interceptions',
+    ball_recoveries: 'Ball Recoveries',
+    clearances: 'Clearances',
+    blocks: 'Blocks',
+    fouls_committed: 'Fouls Committed',
+    fouls_won: 'Fouls Won',
+  };
 }

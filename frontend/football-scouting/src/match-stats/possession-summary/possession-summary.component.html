@@ -1,27 +1,34 @@
 <div class="page" style="display: flex; gap: 2rem; width: 100%;">
 
     <!-- Event type counts -->
-    <div>
-        <h3>Event Types</h3>
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Event Types</mat-card-title>
+        </mat-card-header>
         <canvas #eventTypeChart></canvas>
-    </div>
+    </mat-card>
 
     <!-- Player involvement -->
-    <div>
-        <h3>Player Involvements</h3>
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Player Involvements</mat-card-title>
+        </mat-card-header>
         <canvas #playerChart></canvas>
-    </div>
+    </mat-card>
 
     <!-- Distance covered -->
-    <div>
-        <h3>Distance Covered (m)</h3>
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Distance Covered (m)</mat-card-title>
+        </mat-card-header>
         <canvas #distanceChart></canvas>
-    </div>
+    </mat-card>
 
     <!-- Success / Failure ratios -->
-    <div>
-        <h3>Success vs Failure</h3>
+    <mat-card appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>Success vs Failure</mat-card-title>
+        </mat-card-header>
         <canvas #successChart></canvas>
-    </div>
-
+    </mat-card>
 </div>
